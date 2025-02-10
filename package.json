@@ -1,0 +1,16 @@
+{
+	"name": "@antv/graph_secure_eval",
+	"version": "0.0.1",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "tsx src/test.ts"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "MIT",
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"tsx": "^4.19.2"
+	}
+}
