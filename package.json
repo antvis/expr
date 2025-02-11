@@ -1,16 +1,16 @@
 {
-	"name": "@antv/graph_secure_eval",
+	"name": "@antv/graph-secure-eval",
 	"version": "0.0.1",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"test": "tsx src/test.ts"
+		"test": "pnpm vitest"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "MIT",
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"tsx": "^4.19.2"
+		"vitest": "^3.0.5"
 	}
 }
