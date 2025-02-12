@@ -10,8 +10,8 @@ import type {
 	Identifier,
 } from "./parser";
 
-type Context = Record<string, unknown>;
-type Functions = Record<string, (...args: unknown[]) => unknown>;
+export type Context = Record<string, unknown>;
+export type Functions = Record<string, (...args: unknown[]) => unknown>;
 
 /**
  * Interpreter class that evaluates AST nodes and produces a result
@@ -50,7 +50,8 @@ export class Interpreter {
 	 * @param node The node to evaluate
 	 * @returns The result of evaluation
 	 */
-	private evaluateNode(node: Expression) {
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	private evaluateNode(node: Expression): any {
 		switch (node.type) {
 			case "Literal":
 				return this.evaluateLiteral(node);
@@ -81,7 +82,7 @@ export class Interpreter {
 	 * @example "hello" → "hello"
 	 * @example 42 → 42
 	 */
-	private evaluateLiteral(node: Literal) {
+	private evaluateLiteral(node: Literal): number | string | boolean | null {
 		return node.value;
 	}
 
