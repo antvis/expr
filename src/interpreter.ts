@@ -34,14 +34,25 @@ export class Interpreter {
 	}
 
 	/**
+	 * Sets a function
+	 */
+	setFunction(name: string, fn: (...args: unknown[]) => unknown) {
+		this.functions[name] = fn;
+	}
+
+	/**
 	 * Evaluates an AST and returns the result
 	 * @param ast The AST to evaluate
+	 * @param context Optional context to override the default context
 	 * @returns The result of evaluation
 	 * @example
 	 * const ast = parser.parse(tokens);
 	 * const result = interpreter.evaluate(ast);
 	 */
-	evaluate(ast: Program) {
+	evaluate(ast: Program, context?: Context): unknown {
+		if (context) {
+			this.context = { ...this.context, ...context };
+		}
 		return this.evaluateNode(ast.body);
 	}
 
@@ -50,30 +61,31 @@ export class Interpreter {
 	 * @param node The node to evaluate
 	 * @returns The result of evaluation
 	 */
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	private evaluateNode(node: Expression): any {
-		switch (node.type) {
-			case "Literal":
-				return this.evaluateLiteral(node);
-			case "Identifier":
-				return this.evaluateIdentifier(node);
-			case "MemberExpression":
-				return this.evaluateMemberExpression(node);
-			case "CallExpression":
-				return this.evaluateCallExpression(node);
-			case "BinaryExpression":
-				return this.evaluateBinaryExpression(node);
-			case "UnaryExpression":
-				return this.evaluateUnaryExpression(node);
-			case "ConditionalExpression":
-				return this.evaluateConditionalExpression(node);
-			default:
-				throw new Error(
-					`Unknown node type: ${
-						// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-						(node as any).type
-					}`,
-				);
+	private evaluateNode(node: Expression): unknown {
+		try {
+			switch (node.type) {
+				case "Literal":
+					return this.evaluateLiteral(node);
+				case "Identifier":
+					return this.evaluateIdentifier(node);
+				case "MemberExpression":
+					return this.evaluateMemberExpression(node);
+				case "CallExpression":
+					return this.evaluateCallExpression(node);
+				case "BinaryExpression":
+					return this.evaluateBinaryExpression(node);
+				case "UnaryExpression":
+					return this.evaluateUnaryExpression(node);
+				case "ConditionalExpression":
+					return this.evaluateConditionalExpression(node);
+				default:
+					throw new Error(`Unsupported node type: ${(node as any).type}`);
+			}
+		} catch (error) {
+			if (error instanceof Error) {
+				throw new Error(`Evaluation error: ${error.message}`);
+			}
+			throw error;
 		}
 	}
 
@@ -90,7 +102,7 @@ export class Interpreter {
 	 * Evaluates an identifier by looking up its value in the context
 	 * @example data → context.data
 	 */
-	private evaluateIdentifier(node: Identifier) {
+	private evaluateIdentifier(node: Identifier): unknown {
 		if (!(node.name in this.context)) {
 			throw new Error(`Undefined variable: ${node.name}`);
 		}
@@ -102,7 +114,7 @@ export class Interpreter {
 	 * @example data.value → context.data.value
 	 * @example data["value"] → context.data["value"]
 	 */
-	private evaluateMemberExpression(node: MemberExpression) {
+	private evaluateMemberExpression(node: MemberExpression): unknown {
 		const object = this.evaluateNode(node.object);
 		if (object == null) {
 			throw new Error("Cannot access property of null or undefined");
@@ -112,14 +124,15 @@ export class Interpreter {
 			? this.evaluateNode(node.property)
 			: (node.property as Identifier).name;
 
-		return object[property];
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		return (object as any)[property as string | number];
 	}
 
 	/**
 	 * Evaluates a function call
 	 * @example @sum(1, 2) → functions.sum(1, 2)
 	 */
-	private evaluateCallExpression(node: CallExpression) {
+	private evaluateCallExpression(node: CallExpression): unknown {
 		const func = this.functions[node.callee.name];
 		if (!func) {
 			throw new Error(`Undefined function: ${node.callee.name}`);
@@ -134,37 +147,37 @@ export class Interpreter {
 	 * @example a + b → context.a + context.b
 	 * @example x > y → context.x > context.y
 	 */
-	private evaluateBinaryExpression(node: BinaryExpression) {
+	private evaluateBinaryExpression(node: BinaryExpression): unknown {
 		const left = this.evaluateNode(node.left);
 		const right = this.evaluateNode(node.right);
 
 		switch (node.operator) {
 			case "+":
-				return left + right;
+				return (left as any) + (right as any);
 			case "-":
-				return left - right;
+				return (left as number) - (right as number);
 			case "*":
-				return left * right;
+				return (left as number) * (right as number);
 			case "/":
-				return left / right;
+				return (left as number) / (right as number);
 			case "%":
-				return left % right;
+				return (left as number) % (right as number);
 			case "===":
 				return left === right;
 			case "!==":
 				return left !== right;
 			case ">":
-				return left > right;
+				return (left as number) > (right as number);
 			case ">=":
-				return left >= right;
+				return (left as number) >= (right as number);
 			case "<":
-				return left < right;
+				return (left as number) < (right as number);
 			case "<=":
-				return left <= right;
+				return (left as number) <= (right as number);
 			case "&&":
-				return left && right;
+				return (left as boolean) && (right as boolean);
 			case "||":
-				return left || right;
+				return (left as boolean) || (right as boolean);
 			default:
 				throw new Error(`Unknown operator: ${node.operator}`);
 		}
@@ -174,7 +187,7 @@ export class Interpreter {
 	 * Evaluates a unary expression
 	 * @example !valid → !context.valid
 	 */
-	private evaluateUnaryExpression(node: UnaryExpression) {
+	private evaluateUnaryExpression(node: UnaryExpression): unknown {
 		const argument = this.evaluateNode(node.argument);
 
 		switch (node.operator) {
@@ -189,7 +202,7 @@ export class Interpreter {
 	 * Evaluates a conditional (ternary) expression
 	 * @example a ? b : c → context.a ? context.b : context.c
 	 */
-	private evaluateConditionalExpression(node: ConditionalExpression) {
+	private evaluateConditionalExpression(node: ConditionalExpression): unknown {
 		const test = this.evaluateNode(node.test);
 		return test
 			? this.evaluateNode(node.consequent)
