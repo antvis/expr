@@ -79,7 +79,9 @@ export class Interpreter {
 				case "ConditionalExpression":
 					return this.evaluateConditionalExpression(node);
 				default:
-					throw new Error(`Unsupported node type: ${(node as any).type}`);
+					throw new Error(
+						`Unsupported node type: ${(node as Expression).type}`,
+					);
 			}
 		} catch (error) {
 			if (error instanceof Error) {
@@ -153,7 +155,10 @@ export class Interpreter {
 
 		switch (node.operator) {
 			case "+":
-				return (left as any) + (right as any);
+				if (typeof left === "number" && typeof right === "number") {
+					return left + right;
+				}
+				return String(left) + String(right);
 			case "-":
 				return (left as number) - (right as number);
 			case "*":
