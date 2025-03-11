@@ -1,3 +1,4 @@
+import { ExpressionError } from "./index";
 import type {
 	Program,
 	Expression,
@@ -79,13 +80,13 @@ export class Interpreter {
 				case "ConditionalExpression":
 					return this.evaluateConditionalExpression(node);
 				default:
-					throw new Error(
+					throw new ExpressionError(
 						`Unsupported node type: ${(node as Expression).type}`,
 					);
 			}
 		} catch (error) {
-			if (error instanceof Error) {
-				throw new Error(`Evaluation error: ${error.message}`);
+			if (error instanceof ExpressionError) {
+				throw new ExpressionError(`Evaluation error: ${error.message}`);
 			}
 			throw error;
 		}
@@ -106,7 +107,7 @@ export class Interpreter {
 	 */
 	private evaluateIdentifier(node: Identifier): unknown {
 		if (!(node.name in this.context)) {
-			throw new Error(`Undefined variable: ${node.name}`);
+			throw new ExpressionError(`Undefined variable: ${node.name}`);
 		}
 		return this.context[node.name];
 	}
@@ -119,7 +120,7 @@ export class Interpreter {
 	private evaluateMemberExpression(node: MemberExpression): unknown {
 		const object = this.evaluateNode(node.object);
 		if (object == null) {
-			throw new Error("Cannot access property of null or undefined");
+			throw new ExpressionError("Cannot access property of null or undefined");
 		}
 
 		const property = node.computed
@@ -137,7 +138,7 @@ export class Interpreter {
 	private evaluateCallExpression(node: CallExpression): unknown {
 		const func = this.functions[node.callee.name];
 		if (!func) {
-			throw new Error(`Undefined function: ${node.callee.name}`);
+			throw new ExpressionError(`Undefined function: ${node.callee.name}`);
 		}
 
 		const args = node.arguments.map((arg) => this.evaluateNode(arg));
@@ -184,7 +185,7 @@ export class Interpreter {
 			case "||":
 				return (left as boolean) || (right as boolean);
 			default:
-				throw new Error(`Unknown operator: ${node.operator}`);
+				throw new ExpressionError(`Unknown operator: ${node.operator}`);
 		}
 	}
 
@@ -199,7 +200,7 @@ export class Interpreter {
 			case "!":
 				return !argument;
 			default:
-				throw new Error(`Unknown operator: ${node.operator}`);
+				throw new ExpressionError(`Unknown operator: ${node.operator}`);
 		}
 	}
 

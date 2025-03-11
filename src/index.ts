@@ -16,6 +16,25 @@ export class ExpressionError extends Error {
 		super(message);
 		this.name = "ExpressionError";
 	}
+
+	/**
+	 * Returns formatted error message, including position and token information (if available)
+	 */
+	toString(): string {
+		let errorString = `${this.name}: ${this.message}`;
+
+		if (this.position !== undefined) {
+			errorString += ` (position: ${this.position}`;
+
+			if (this.token !== undefined) {
+				errorString += `, token: ${this.token})`;
+			} else {
+				errorString += ")";
+			}
+		}
+
+		return errorString;
+	}
 }
 
 export class Expression {
@@ -60,10 +79,17 @@ export class Expression {
 	 */
 	compile(): this {
 		try {
+			if (this.expression === "" || !this.expression) {
+				throw new ExpressionError("Cannot evaluate empty expression");
+			}
 			const tokens = this.tokenizer.tokenize(this.expression);
 			this.ast = this.parser.parse(tokens);
 			return this;
 		} catch (error) {
+			if (error instanceof ExpressionError) {
+				throw error;
+			}
+
 			if (error instanceof Error) {
 				throw new ExpressionError(error.message);
 			}
@@ -84,9 +110,12 @@ export class Expression {
 				throw new ExpressionError("Cannot evaluate empty expression");
 			}
 
-			this.interpreter = new Interpreter(context);
-			return this.interpreter.evaluate(this.ast);
+			return this.interpreter.evaluate(this.ast, context);
 		} catch (error) {
+			if (error instanceof ExpressionError) {
+				throw error;
+			}
+
 			if (error instanceof Error) {
 				throw new ExpressionError(error.message);
 			}

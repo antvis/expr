@@ -1,4 +1,4 @@
-# Graph Secure Eval
+# super-spec
 
 A secure expression evaluator for JavaScript/TypeScript with a chainable API. Perfect for safely evaluating dynamic expressions in SSR environments.
 
@@ -14,7 +14,7 @@ A secure expression evaluator for JavaScript/TypeScript with a chainable API. Pe
 ## Basic Usage
 
 ```typescript
-import { evaluate, createExpression } from "@antv/graph-secure-eval";
+import { evaluate, createExpression } from "super-spec";
 
 // Quick evaluation
 const result = evaluate("price * quantity", {
@@ -78,7 +78,7 @@ const expr = createExpression('someExpression')
 ### Error Handling
 
 ```typescript
-import { ExpressionError } from "@antv/graph-secure-eval";
+import { ExpressionError } from "super-spec";
 
 try {
   const result = createExpression('undefined_var + 1')
