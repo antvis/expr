@@ -1,3 +1,5 @@
+import { ExpressionError } from "./index";
+
 /**
  * TokenType represents all possible token types in our expression language
  * - Basic types: STRING, NUMBER, BOOLEAN, NULL
@@ -133,7 +135,11 @@ export class Tokenizer {
 					tokens.push({ type: "COLON", value: ":" });
 					break;
 				default:
-					throw new Error(`Unexpected character: ${char}`);
+					throw new ExpressionError(
+						`Unexpected character: ${char}`,
+						this.pos,
+						char,
+					);
 			}
 			this.pos++;
 		}
@@ -166,7 +172,11 @@ export class Tokenizer {
 			this.pos++;
 		}
 
-		throw new Error("Unterminated string");
+		throw new ExpressionError(
+			"Unterminated string",
+			this.pos,
+			this.input.substring(Math.max(0, this.pos - 10), this.pos),
+		);
 	}
 
 	/**

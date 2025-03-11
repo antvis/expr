@@ -1,3 +1,4 @@
+import { ExpressionError } from "./index";
 import type { Token } from "./tokenizer";
 
 /**
@@ -229,6 +230,7 @@ export class Parser {
 
 		while (true) {
 			const token = this.peek();
+
 			if (!token) break;
 
 			const nextPrecedence = this.getOperatorPrecedence(token);
@@ -239,7 +241,12 @@ export class Parser {
 				this.consume(); // consume ?
 				const consequent = this.parseExpression(0);
 				if (!this.match("COLON")) {
-					throw new Error("Expected ':' in conditional expression");
+					const token = this.peek();
+					throw new ExpressionError(
+						"Expected ':' in conditional expression",
+						this.current,
+						token ? token.value : "<end of input>",
+					);
 				}
 				this.consume(); // consume :
 				const alternate = this.parseExpression(0);
@@ -294,7 +301,12 @@ export class Parser {
 	 */
 	private parsePrimary(): Expression {
 		const token = this.peek();
-		if (!token) throw new Error("Unexpected end of input");
+		if (!token)
+			throw new ExpressionError(
+				"Unexpected end of input",
+				this.current,
+				"<end of input>",
+			);
 
 		switch (token.type) {
 			case "NUMBER":
@@ -343,14 +355,23 @@ export class Parser {
 				this.consume();
 				const expr = this.parseExpression(0);
 				if (!this.match("PAREN_RIGHT")) {
-					throw new Error("Expected closing parenthesis");
+					const token = this.peek();
+					throw new ExpressionError(
+						"Expected closing parenthesis",
+						this.current,
+						token ? token.value : "<end of input>",
+					);
 				}
 				this.consume();
 				return expr;
 			}
 
 			default:
-				throw new Error(`Unexpected token: ${token.type}`);
+				throw new ExpressionError(
+					`Unexpected token: ${token.type}`,
+					this.current,
+					token.value,
+				);
 		}
 	}
 
@@ -386,7 +407,12 @@ export class Parser {
 
 		if (token.type === "DOT") {
 			if (!this.match("IDENTIFIER")) {
-				throw new Error("Expected identifier after dot");
+				const token = this.peek();
+				throw new ExpressionError(
+					"Expected identifier after dot",
+					this.current,
+					token ? token.value : "<end of input>",
+				);
 			}
 			property = {
 				type: "Identifier",
@@ -397,7 +423,12 @@ export class Parser {
 			// BRACKET_LEFT
 			property = this.parseExpression(0);
 			if (!this.match("BRACKET_RIGHT")) {
-				throw new Error("Expected closing bracket");
+				const token = this.peek();
+				throw new ExpressionError(
+					"Expected closing bracket",
+					this.current,
+					token ? token.value : "<end of input>",
+				);
 			}
 			this.consume();
 			computed = true;
@@ -419,7 +450,12 @@ export class Parser {
 		const args: Expression[] = [];
 
 		if (!this.match("PAREN_LEFT")) {
-			throw new Error("Expected opening parenthesis after function name");
+			const token = this.peek();
+			throw new ExpressionError(
+				"Expected opening parenthesis after function name",
+				this.current,
+				token ? token.value : "<end of input>",
+			);
 		}
 		this.consume();
 
@@ -433,13 +469,23 @@ export class Parser {
 
 			// Then check for end of input before doing anything else
 			if (!this.peek()) {
-				throw new Error("Expected closing parenthesis");
+				const token = this.peek();
+				throw new ExpressionError(
+					"Expected closing parenthesis",
+					this.current,
+					token ? token.value : "<end of input>",
+				);
 			}
 
 			// If we have arguments already, we need a comma
 			if (args.length > 0) {
 				if (!this.match("COMMA")) {
-					throw new Error("Expected comma between function arguments");
+					const token = this.peek();
+					throw new ExpressionError(
+						"Expected comma between function arguments",
+						this.current,
+						token ? token.value : "<end of input>",
+					);
 				}
 				this.consume();
 			}
