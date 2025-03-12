@@ -216,7 +216,6 @@ describe("Error Handling Tests", () => {
 		expect(result).toBe("string with z escape");
 	});
 
-	// 解析器错误测试
 	it("should provide detailed error for missing closing parenthesis", () => {
 		try {
 			evaluate("(1 + 2");

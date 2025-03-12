@@ -20,7 +20,8 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true
-		}
+		},
+		"ignore": ["node_modules", "dist", "tests"]
 	},
 	"javascript": {
 		"formatter": {
