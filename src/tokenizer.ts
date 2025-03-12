@@ -22,7 +22,8 @@ export type TokenType =
 	| "PAREN_RIGHT"
 	| "COMMA"
 	| "QUESTION"
-	| "COLON";
+	| "COLON"
+	| "DOLLAR";
 
 /**
  * Token represents a single unit in the expression
@@ -267,7 +268,11 @@ export class Tokenizer {
 				return { type: "OPERATOR", value: op };
 			}
 		}
-		throw new Error(`Unknown operator at position ${this.pos}`);
+		throw new ExpressionError(
+			`Unknown operator at position ${this.pos}, the token is ${this.input.substring(Math.max(0, this.pos - 10), this.pos)}`,
+			this.pos,
+			this.input.substring(Math.max(0, this.pos - 10), this.pos),
+		);
 	}
 
 	/**
