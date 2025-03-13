@@ -1,6 +1,6 @@
-import { Tokenizer } from "./tokenizer";
-import { Parser, type Program } from "./parser";
 import { type Context, Interpreter } from "./interpreter";
+import { Parser, type Program } from "./parser";
+import { Tokenizer } from "./tokenizer";
 
 export interface EvaluatorOptions {
 	strictMode?: boolean;

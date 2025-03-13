@@ -1,14 +1,14 @@
 import { ExpressionError } from "./index";
 import type {
-	Program,
-	Expression,
 	BinaryExpression,
-	UnaryExpression,
-	ConditionalExpression,
-	MemberExpression,
 	CallExpression,
-	Literal,
+	ConditionalExpression,
+	Expression,
 	Identifier,
+	Literal,
+	MemberExpression,
+	Program,
+	UnaryExpression,
 } from "./parser";
 
 export type Context = Record<string, unknown>;

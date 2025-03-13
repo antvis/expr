@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Tokenizer, type Token } from "../src";
+import { type Token, Tokenizer } from "../src";
 
 describe("Tokenizer", () => {
 	const tokenizer = new Tokenizer();
