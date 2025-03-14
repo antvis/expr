@@ -29,7 +29,7 @@ jobs:
         run: pnpm install
 
       - name: Check code formatting
-        run: pnpm exec @biomejs/biome check .
+        run: pnpm biome check .
 
       - name: Run tests
         run: pnpm test
