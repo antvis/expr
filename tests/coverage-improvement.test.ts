@@ -5,9 +5,9 @@ import {
 	createExpression,
 	evaluate,
 } from "../src";
-import { Tokenizer } from "../src/tokenizer";
-import { Parser } from "../src/parser";
 import { Interpreter } from "../src/interpreter";
+import { Parser } from "../src/parser";
+import { Tokenizer } from "../src/tokenizer";
 
 describe("Coverage Improvement Tests", () => {
 	describe("Expression Error Handling", () => {
