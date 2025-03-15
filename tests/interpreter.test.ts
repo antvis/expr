@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { createInterpreterState, evaluate } from "../src/interpreter";
 import { parse } from "../src/parser";
 import { tokenize } from "../src/tokenizer";
-import { createInterpreterState, evaluate } from "../src/interpreter";
 
 describe("Interpreter", () => {
 	function evaluateExpression(input: string, context = {}, functions = {}) {

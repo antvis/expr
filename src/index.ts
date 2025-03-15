@@ -4,7 +4,7 @@ import {
 	evaluate as evaluateAst,
 	setFunction,
 } from "./interpreter";
-import { parse, type Program } from "./parser";
+import { type Program, parse } from "./parser";
 import { tokenize } from "./tokenizer";
 
 export interface EvaluatorOptions {
