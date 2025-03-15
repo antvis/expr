@@ -1,4 +1,4 @@
-# @antv/super-spec
+# @antv/expr
 
 Have you ever wanted to use some dynamic JS capabilities when using the ssr chart library but were afraid of data security?
 
@@ -13,17 +13,17 @@ Now we have solved this problem for you. We have designed a simple and easy-to-u
 ## Installation
 
 ```bash
-npm install @antv/super-spec
+npm install @antv/expr
 # or
-yarn add @antv/super-spec
+yarn add @antv/expr
 # or
-pnpm add @antv/super-spec
+pnpm add @antv/expr
 ```
 
 ## Basic Usage
 
 ```typescript
-import { evaluate, createExpression } from "@antv/super-spec";
+import { evaluate, createExpression } from "@antv/expr";
 
 // Quick evaluation
 const result = evaluate("price * quantity", {
@@ -208,7 +208,7 @@ This library is designed with security in mind:
 This library is written in TypeScript and provides full type definitions.
 
 ```typescript
-import { Expression, ExpressionError, evaluate, createExpression } from "@antv/super-spec";
+import { Expression, ExpressionError, evaluate, createExpression } from "@antv/expr";
 
 // All types are properly exported and available
 const expr: Expression = createExpression('x + y');
