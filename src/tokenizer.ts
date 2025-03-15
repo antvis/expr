@@ -36,198 +36,104 @@ export interface Token {
 }
 
 /**
- * Tokenizer class that converts an input expression string into a sequence of tokens
- *
- * Time Complexity:
- * - tokenize(): O(n) where n is the length of input string
- * - Each read* method: O(k) where k is the length of the current token
- * - Overall: O(n) as each character is processed exactly once
- *
- * Space Complexity:
- * - O(n) for storing the tokens array
- * - O(1) for other internal state (pos, input)
- * - Overall: O(n) where n is the length of input string
+ * Checks if a character can start an operator
+ * @param char - Character to check
+ * @returns boolean indicating if char can start an operator
  */
-export class Tokenizer {
-	// Current position in the input string
-	private pos = 0;
-	// Input string being tokenized
-	private input = "";
+const isOperatorStart = (char: string): boolean => {
+	return /[+\-*/%!&|=<>]/.test(char);
+};
 
-	/**
-	 * Converts an input expression string into an array of tokens
-	 * Processes the input character by character, identifying tokens based on patterns
-	 *
-	 * @param expr - The input expression string to tokenize
-	 * @returns Array of Token objects
-	 * @throws Error for unexpected or invalid characters
-	 */
-	tokenize(expr: string): Token[] {
-		this.pos = 0;
-		this.input = expr;
-		const tokens: Token[] = [];
-
-		while (this.pos < this.input.length) {
-			const char = this.input[this.pos];
-
-			// Skip whitespace characters (space, tab, newline)
-			if (/\s/.test(char)) {
-				this.pos++;
-				continue;
-			}
-
-			// Handle string literals (both single and double quotes)
-			if (char === '"' || char === "'") {
-				tokens.push(this.readString());
-				continue;
-			}
-
-			// Handle numbers (including negative numbers and decimals)
-			if (
-				/[0-9]/.test(char) ||
-				(char === "-" && /[0-9]/.test(this.input[this.pos + 1]))
-			) {
-				tokens.push(this.readNumber());
-				continue;
-			}
-
-			// Handle predefined functions starting with @
-			if (char === "@") {
-				tokens.push(this.readFunction());
-				continue;
-			}
-
-			// Handle identifiers, boolean literals, and null
-			if (/[a-zA-Z_]/.test(char)) {
-				tokens.push(this.readIdentifier());
-				continue;
-			}
-
-			// Handle operators (+, -, *, /, etc.)
-			if (this.isOperatorStart(char)) {
-				tokens.push(this.readOperator());
-				continue;
-			}
-
-			// Handle single-character tokens
-			switch (char) {
-				case ".":
-					tokens.push({ type: "DOT", value: "." });
-					break;
-				case "[":
-					tokens.push({ type: "BRACKET_LEFT", value: "[" });
-					break;
-				case "]":
-					tokens.push({ type: "BRACKET_RIGHT", value: "]" });
-					break;
-				case "(":
-					tokens.push({ type: "PAREN_LEFT", value: "(" });
-					break;
-				case ")":
-					tokens.push({ type: "PAREN_RIGHT", value: ")" });
-					break;
-				case ",":
-					tokens.push({ type: "COMMA", value: "," });
-					break;
-				case "?":
-					tokens.push({ type: "QUESTION", value: "?" });
-					break;
-				case ":":
-					tokens.push({ type: "COLON", value: ":" });
-					break;
-				default:
-					throw new ExpressionError(
-						`Unexpected character: ${char}`,
-						this.pos,
-						char,
-					);
-			}
-			this.pos++;
-		}
-
-		return tokens;
-	}
+/**
+ * Converts an input expression string into an array of tokens
+ * Processes the input character by character, identifying tokens based on patterns
+ *
+ * Time Complexity: O(n) where n is the length of input string
+ * Space Complexity: O(n) for storing the tokens array
+ *
+ * @param expr - The input expression string to tokenize
+ * @returns Array of Token objects
+ * @throws Error for unexpected or invalid characters
+ */
+export const tokenize = (expr: string): Token[] => {
+	// Use closure to encapsulate the tokenizer state
+	let pos = 0;
+	const input = expr;
+	const tokens: Token[] = [];
 
 	/**
 	 * Reads a string literal token, handling escape sequences
-	 * @returns String token including the content between quotes
+	 * @returns String token
 	 * @throws Error for unterminated strings
 	 */
-	private readString(): Token {
-		const quote = this.input[this.pos];
+	const readString = (): Token => {
+		const quote = input[pos];
 		let value = "";
-		this.pos++;
+		pos++; // Skip opening quote
 
-		while (this.pos < this.input.length) {
-			const char = this.input[this.pos];
+		while (pos < input.length) {
+			const char = input[pos];
 			if (char === quote) {
-				this.pos++;
+				pos++; // Skip closing quote
 				return { type: "STRING", value };
 			}
 			if (char === "\\") {
-				this.pos++;
-				value += this.input[this.pos];
+				pos++;
+				value += input[pos];
 			} else {
 				value += char;
 			}
-			this.pos++;
+			pos++;
 		}
 
 		throw new ExpressionError(
 			"Unterminated string",
-			this.pos,
-			this.input.substring(Math.max(0, this.pos - 10), this.pos),
+			pos,
+			input.substring(Math.max(0, pos - 10), pos),
 		);
-	}
+	};
 
 	/**
 	 * Reads a numeric token, handling integers, decimals, and negative numbers
 	 * @returns Number token
 	 */
-	private readNumber(): Token {
-		const start = this.pos;
+	const readNumber = (): Token => {
+		const start = pos;
+
 		while (
-			this.pos < this.input.length &&
-			(/[0-9]/.test(this.input[this.pos]) ||
-				this.input[this.pos] === "." ||
-				this.input[this.pos] === "-")
+			pos < input.length &&
+			(/[0-9]/.test(input[pos]) || input[pos] === "." || input[pos] === "-")
 		) {
-			this.pos++;
+			pos++;
 		}
-		const value = this.input.slice(start, this.pos);
+		const value = input.slice(start, pos);
 		return { type: "NUMBER", value };
-	}
+	};
 
 	/**
 	 * Reads a function name token after @ symbol
 	 * @returns Function token
 	 */
-	private readFunction(): Token {
-		this.pos++; // jump @
-		const start = this.pos;
-		while (
-			this.pos < this.input.length &&
-			/[a-zA-Z_]/.test(this.input[this.pos])
-		) {
-			this.pos++;
+	const readFunction = (): Token => {
+		pos++; // Skip @ symbol
+		const start = pos;
+		while (pos < input.length && /[a-zA-Z_]/.test(input[pos])) {
+			pos++;
 		}
-		const value = this.input.slice(start, this.pos);
+		const value = input.slice(start, pos);
 		return { type: "FUNCTION", value };
-	}
+	};
 
 	/**
 	 * Reads an identifier token, also handling boolean and null literals
-	 * @returns Identifier, Boolean, or Null token
+	 * @returns Identifier, boolean, or null token
 	 */
-	private readIdentifier(): Token {
-		const start = this.pos;
-		while (
-			this.pos < this.input.length &&
-			/[a-zA-Z0-9_]/.test(this.input[this.pos])
-		) {
-			this.pos++;
+	const readIdentifier = (): Token => {
+		const start = pos;
+		while (pos < input.length && /[a-zA-Z0-9_]/.test(input[pos])) {
+			pos++;
 		}
-		const value = this.input.slice(start, this.pos);
+		const value = input.slice(start, pos);
 
 		// Handle special keywords
 		if (value === "true" || value === "false") {
@@ -238,14 +144,14 @@ export class Tokenizer {
 		}
 
 		return { type: "IDENTIFIER", value };
-	}
+	};
 
 	/**
 	 * Reads an operator token, handling multi-character operators first
 	 * @returns Operator token
 	 * @throws Error for unknown operators
 	 */
-	private readOperator(): Token {
+	const readOperator = (): Token => {
 		const operators = [
 			"===", // Equality
 			"!==", // Inequality
@@ -263,24 +169,100 @@ export class Tokenizer {
 			"!", // Logical NOT
 		];
 		for (const op of operators) {
-			if (this.input.startsWith(op, this.pos)) {
-				this.pos += op.length;
+			if (input.startsWith(op, pos)) {
+				pos += op.length;
 				return { type: "OPERATOR", value: op };
 			}
 		}
 		throw new ExpressionError(
-			`Unknown operator at position ${this.pos}, the token is ${this.input.substring(Math.max(0, this.pos - 10), this.pos)}`,
-			this.pos,
-			this.input.substring(Math.max(0, this.pos - 10), this.pos),
+			`Unknown operator at position ${pos}, the token is ${input.substring(Math.max(0, pos - 10), pos)}`,
+			pos,
+			input.substring(Math.max(0, pos - 10), pos),
 		);
+	};
+
+	while (pos < input.length) {
+		const char = input[pos];
+
+		// Skip whitespace characters (space, tab, newline)
+		if (/\s/.test(char)) {
+			pos++;
+			continue;
+		}
+
+		// Handle string literals (both single and double quotes)
+		if (char === '"' || char === "'") {
+			const token = readString();
+			tokens.push(token);
+			continue;
+		}
+
+		// Handle numbers (including negative numbers and decimals)
+		if (/[0-9]/.test(char) || (char === "-" && /[0-9]/.test(input[pos + 1]))) {
+			const token = readNumber();
+			tokens.push(token);
+			continue;
+		}
+
+		// Handle predefined functions starting with @
+		if (char === "@") {
+			const token = readFunction();
+			tokens.push(token);
+			continue;
+		}
+
+		// Handle identifiers, boolean literals, and null
+		if (/[a-zA-Z_]/.test(char)) {
+			const token = readIdentifier();
+			tokens.push(token);
+			continue;
+		}
+
+		// Handle operators (+, -, *, /, etc.)
+		if (isOperatorStart(char)) {
+			const token = readOperator();
+			tokens.push(token);
+			continue;
+		}
+
+		// Handle single-character tokens
+		let token: Token | null = null;
+		switch (char) {
+			case ".":
+				token = { type: "DOT", value: "." };
+				break;
+			case "[":
+				token = { type: "BRACKET_LEFT", value: "[" };
+				break;
+			case "]":
+				token = { type: "BRACKET_RIGHT", value: "]" };
+				break;
+			case "(":
+				token = { type: "PAREN_LEFT", value: "(" };
+				break;
+			case ")":
+				token = { type: "PAREN_RIGHT", value: ")" };
+				break;
+			case ",":
+				token = { type: "COMMA", value: "," };
+				break;
+			case "?":
+				token = { type: "QUESTION", value: "?" };
+				break;
+			case ":":
+				token = { type: "COLON", value: ":" };
+				break;
+			case "$":
+				token = { type: "DOLLAR", value: "$" };
+				break;
+			default:
+				throw new ExpressionError(`Unexpected character: ${char}`, pos, char);
+		}
+		if (token) {
+			tokens.push(token);
+		}
+		pos++;
 	}
 
-	/**
-	 * Checks if a character can start an operator
-	 * @param char - Character to check
-	 * @returns boolean indicating if char can start an operator
-	 */
-	private isOperatorStart(char: string): boolean {
-		return /[+\-*/%!&|=<>]/.test(char);
-	}
-}
+	return tokens;
+};
