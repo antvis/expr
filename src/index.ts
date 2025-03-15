@@ -1,6 +1,11 @@
-import { type Context, Interpreter } from "./interpreter";
-import { Parser, type Program } from "./parser";
-import { Tokenizer } from "./tokenizer";
+import {
+	type Context,
+	createInterpreterState,
+	evaluate as evaluateAst,
+	setFunction,
+} from "./interpreter";
+import { type Program, parse } from "./parser";
+import { tokenize } from "./tokenizer";
 
 export interface EvaluatorOptions {
 	strictMode?: boolean;
@@ -37,92 +42,177 @@ export class ExpressionError extends Error {
 	}
 }
 
-export class Expression {
-	private readonly tokenizer = new Tokenizer();
-	private readonly parser = new Parser();
-	private interpreter: Interpreter;
-	private options: EvaluatorOptions = {
-		strictMode: true,
-		maxTimeout: 1000,
-	};
-	private ast?: Program;
+/**
+ * State for the Expression evaluator
+ */
+interface ExpressionState {
+	expression: string;
+	interpreterState: ReturnType<typeof createInterpreterState>;
+	options: EvaluatorOptions;
+	ast?: Program;
+}
 
-	constructor(private readonly expression: string) {
-		this.interpreter = new Interpreter();
+/**
+ * Creates a new expression state
+ * @param expression - The expression to evaluate
+ * @returns A new expression state
+ */
+export const createExpressionState = (expression: string): ExpressionState => {
+	return {
+		expression,
+		interpreterState: createInterpreterState(),
+		options: {
+			strictMode: true,
+			maxTimeout: 1000,
+		},
+	};
+};
+
+/**
+ * Configure evaluation options
+ * @param state - Current expression state
+ * @param options - Options to configure
+ * @returns Updated expression state
+ */
+export const configure = (
+	state: ExpressionState,
+	options: Partial<EvaluatorOptions>,
+): ExpressionState => {
+	return {
+		...state,
+		options: { ...state.options, ...options },
+	};
+};
+
+/**
+ * Extend with custom functions
+ * @param state - Current expression state
+ * @param functions - Functions to add
+ * @returns Updated expression state
+ */
+export const extend = (
+	state: ExpressionState,
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	functions: Record<string, (...args: any[]) => any>,
+): ExpressionState => {
+	if (!state.options.strictMode) {
+		let newInterpreterState = state.interpreterState;
+		for (const [key, value] of Object.entries(functions)) {
+			newInterpreterState = setFunction(newInterpreterState, key, value);
+		}
+		return {
+			...state,
+			interpreterState: newInterpreterState,
+		};
+	}
+	throw new ExpressionError(
+		"Cannot extend functions in strict mode. Use configure({ strictMode: false }) first.",
+	);
+};
+
+/**
+ * Compile the expression
+ * @param state - Current expression state
+ * @returns Updated expression state with compiled AST
+ */
+export const compile = (state: ExpressionState): ExpressionState => {
+	try {
+		if (state.expression === "" || !state.expression) {
+			throw new ExpressionError("Cannot evaluate empty expression");
+		}
+		const tokens = tokenize(state.expression);
+		const ast = parse(tokens);
+		return {
+			...state,
+			ast,
+		};
+	} catch (error) {
+		if (error instanceof ExpressionError) {
+			throw error;
+		}
+
+		if (error instanceof Error) {
+			throw new ExpressionError(error.message);
+		}
+		throw error;
+	}
+};
+
+/**
+ * Evaluate the expression with given context
+ * @param state - Current expression state
+ * @param context - Variables to use during evaluation
+ * @returns The evaluation result
+ */
+export const evaluateExpression = (
+	state: ExpressionState,
+	context: Context = {},
+) => {
+	try {
+		let currentState = state;
+		if (!currentState.ast) {
+			currentState = compile(currentState);
+		}
+
+		if (!currentState.ast) {
+			throw new ExpressionError("Cannot evaluate empty expression");
+		}
+
+		return evaluateAst(
+			currentState.ast,
+			currentState.interpreterState,
+			context,
+		);
+	} catch (error) {
+		if (error instanceof ExpressionError) {
+			throw error;
+		}
+
+		if (error instanceof Error) {
+			throw new ExpressionError(error.message);
+		}
+		throw error;
+	}
+};
+
+// For backward compatibility with the class-based API
+export class Expression {
+	private state: ExpressionState;
+
+	constructor(expression: string) {
+		this.state = createExpressionState(expression);
 	}
 
 	/**
 	 * Configure evaluation options
 	 */
 	configure(options: Partial<EvaluatorOptions>): this {
-		this.options = { ...this.options, ...options };
+		this.state = configure(this.state, options);
 		return this;
 	}
 
 	/**
 	 * Extend with custom functions
 	 */
-
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	extend(functions: Record<string, (...args: any[]) => any>): this {
-		if (!this.options.strictMode) {
-			for (const [key, value] of Object.entries(functions)) {
-				this.interpreter.setFunction(key, value);
-			}
-			return this;
-		}
-		throw new ExpressionError(
-			"Cannot extend functions in strict mode. Use configure({ strictMode: false }) first.",
-		);
+		this.state = extend(this.state, functions);
+		return this;
 	}
 
 	/**
 	 * Compile the expression
 	 */
 	compile(): this {
-		try {
-			if (this.expression === "" || !this.expression) {
-				throw new ExpressionError("Cannot evaluate empty expression");
-			}
-			const tokens = this.tokenizer.tokenize(this.expression);
-			this.ast = this.parser.parse(tokens);
-			return this;
-		} catch (error) {
-			if (error instanceof ExpressionError) {
-				throw error;
-			}
-
-			if (error instanceof Error) {
-				throw new ExpressionError(error.message);
-			}
-			throw error;
-		}
+		this.state = compile(this.state);
+		return this;
 	}
 
 	/**
 	 * Evaluate the expression with given context
 	 */
 	evaluate(context: Context = {}) {
-		try {
-			if (!this.ast) {
-				this.compile();
-			}
-
-			if (!this.ast) {
-				throw new ExpressionError("Cannot evaluate empty expression");
-			}
-
-			return this.interpreter.evaluate(this.ast, context);
-		} catch (error) {
-			if (error instanceof ExpressionError) {
-				throw error;
-			}
-
-			if (error instanceof Error) {
-				throw new ExpressionError(error.message);
-			}
-			throw error;
-		}
+		return evaluateExpression(this.state, context);
 	}
 }
 
@@ -132,7 +222,8 @@ export function createExpression(expression: string): Expression {
 }
 
 export function evaluate(expression: string, context: Context = {}) {
-	return new Expression(expression).evaluate(context);
+	const state = createExpressionState(expression);
+	return evaluateExpression(state, context);
 }
 
 // Export all public symbols for custom evaluators

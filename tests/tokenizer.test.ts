@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { type Token, Tokenizer } from "../src";
+import { type Token, tokenize } from "../src";
 
 describe("Tokenizer", () => {
-	const tokenizer = new Tokenizer();
-
 	describe("Basic Literals", () => {
 		it("should tokenize string literals", () => {
 			const input = "\"hello\" 'world'";
@@ -11,13 +9,13 @@ describe("Tokenizer", () => {
 				{ type: "STRING", value: "hello" },
 				{ type: "STRING", value: "world" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 
 		it("should handle escaped quotes in strings", () => {
 			const input = '"hello \\"world\\""';
 			const expected: Token[] = [{ type: "STRING", value: 'hello "world"' }];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 
 		it("should tokenize numbers", () => {
@@ -27,7 +25,7 @@ describe("Tokenizer", () => {
 				{ type: "NUMBER", value: "-3.14" },
 				{ type: "NUMBER", value: "0.5" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 
 		it("should tokenize boolean and null", () => {
@@ -37,7 +35,7 @@ describe("Tokenizer", () => {
 				{ type: "BOOLEAN", value: "false" },
 				{ type: "NULL", value: "null" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 	});
 
@@ -57,7 +55,7 @@ describe("Tokenizer", () => {
 				{ type: "OPERATOR", value: "%" },
 				{ type: "IDENTIFIER", value: "f" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 
 		it("should tokenize comparison operators", () => {
@@ -77,7 +75,7 @@ describe("Tokenizer", () => {
 				{ type: "OPERATOR", value: "<=" },
 				{ type: "IDENTIFIER", value: "g" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 
 		it("should tokenize logical operators", () => {
@@ -90,7 +88,7 @@ describe("Tokenizer", () => {
 				{ type: "OPERATOR", value: "!" },
 				{ type: "IDENTIFIER", value: "c" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 	});
 
@@ -104,7 +102,7 @@ describe("Tokenizer", () => {
 				{ type: "DOT", value: "." },
 				{ type: "IDENTIFIER", value: "nested" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 
 		it("should tokenize bracket notation", () => {
@@ -115,7 +113,7 @@ describe("Tokenizer", () => {
 				{ type: "STRING", value: "value" },
 				{ type: "BRACKET_RIGHT", value: "]" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 	});
 
@@ -128,7 +126,7 @@ describe("Tokenizer", () => {
 				{ type: "IDENTIFIER", value: "values" },
 				{ type: "PAREN_RIGHT", value: ")" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 
 		it("should tokenize function calls with multiple arguments", () => {
@@ -143,7 +141,7 @@ describe("Tokenizer", () => {
 				{ type: "IDENTIFIER", value: "c" },
 				{ type: "PAREN_RIGHT", value: ")" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 	});
 
@@ -157,7 +155,7 @@ describe("Tokenizer", () => {
 				{ type: "COLON", value: ":" },
 				{ type: "IDENTIFIER", value: "falseValue" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 	});
 
@@ -181,21 +179,19 @@ describe("Tokenizer", () => {
 				{ type: "COLON", value: ":" },
 				{ type: "STRING", value: "inactive" },
 			];
-			expect(tokenizer.tokenize(input)).toEqual(expected);
+			expect(tokenize(input)).toEqual(expected);
 		});
 	});
 
 	describe("Error Handling", () => {
 		it("should throw error for unterminated string", () => {
 			const input = '"unclosed string';
-			expect(() => tokenizer.tokenize(input)).toThrow("Unterminated string");
+			expect(() => tokenize(input)).toThrow("Unterminated string");
 		});
 
 		it("should throw error for unexpected character", () => {
 			const input = "a # b";
-			expect(() => tokenizer.tokenize(input)).toThrow(
-				"Unexpected character: #",
-			);
+			expect(() => tokenize(input)).toThrow("Unexpected character: #");
 		});
 	});
 });

@@ -1,34 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { Parser, Tokenizer } from "../src";
-import { Interpreter } from "../src/interpreter";
+import { createInterpreterState, evaluate } from "../src/interpreter";
+import { parse } from "../src/parser";
+import { tokenize } from "../src/tokenizer";
 
 describe("Interpreter", () => {
-	const tokenizer = new Tokenizer();
-	const parser = new Parser();
-
-	function evaluate(input: string, context = {}, functions = {}) {
-		const tokens = tokenizer.tokenize(input);
-		const ast = parser.parse(tokens);
-		const interpreter = new Interpreter(context, functions);
-		return interpreter.evaluate(ast);
+	function evaluateExpression(input: string, context = {}, functions = {}) {
+		const tokens = tokenize(input);
+		const ast = parse(tokens);
+		const interpreterState = createInterpreterState({}, functions);
+		return evaluate(ast, interpreterState, context);
 	}
 
 	describe("Literals", () => {
 		it("should evaluate number literals", () => {
-			expect(evaluate("42")).toBe(42);
+			expect(evaluateExpression("42")).toBe(42);
 		});
 
 		it("should evaluate string literals", () => {
-			expect(evaluate('"hello"')).toBe("hello");
+			expect(evaluateExpression('"hello"')).toBe("hello");
 		});
 
 		it("should evaluate boolean literals", () => {
-			expect(evaluate("true")).toBe(true);
-			expect(evaluate("false")).toBe(false);
+			expect(evaluateExpression("true")).toBe(true);
+			expect(evaluateExpression("false")).toBe(false);
 		});
 
 		it("should evaluate null", () => {
-			expect(evaluate("null")).toBe(null);
+			expect(evaluateExpression("null")).toBe(null);
 		});
 	});
 
@@ -43,15 +41,15 @@ describe("Interpreter", () => {
 		};
 
 		it("should evaluate dot notation", () => {
-			expect(evaluate("data.value", context)).toBe(42);
+			expect(evaluateExpression("data.value", context)).toBe(42);
 		});
 
 		it("should evaluate bracket notation", () => {
-			expect(evaluate('data["value"]', context)).toBe(42);
+			expect(evaluateExpression('data["value"]', context)).toBe(42);
 		});
 
 		it("should evaluate nested access", () => {
-			expect(evaluate("data.nested.array[1]", context)).toBe(2);
+			expect(evaluateExpression("data.nested.array[1]", context)).toBe(2);
 		});
 	});
 
@@ -62,12 +60,12 @@ describe("Interpreter", () => {
 		};
 
 		it("should evaluate function calls", () => {
-			expect(evaluate("@sum(1, 2, 3)", {}, functions)).toBe(6);
+			expect(evaluateExpression("@sum(1, 2, 3)", {}, functions)).toBe(6);
 		});
 
 		it("should evaluate nested expressions in arguments", () => {
 			const context = { x: 1, y: 2 };
-			expect(evaluate("@max(x, y, 3)", context, functions)).toBe(3);
+			expect(evaluateExpression("@max(x, y, 3)", context, functions)).toBe(3);
 		});
 	});
 
@@ -75,32 +73,32 @@ describe("Interpreter", () => {
 		const context = { a: 5, b: 3 };
 
 		it("should evaluate arithmetic operators", () => {
-			expect(evaluate("a + b", context)).toBe(8);
-			expect(evaluate("a - b", context)).toBe(2);
-			expect(evaluate("a * b", context)).toBe(15);
-			expect(evaluate("a / b", context)).toBe(5 / 3);
+			expect(evaluateExpression("a + b", context)).toBe(8);
+			expect(evaluateExpression("a - b", context)).toBe(2);
+			expect(evaluateExpression("a * b", context)).toBe(15);
+			expect(evaluateExpression("a / b", context)).toBe(5 / 3);
 		});
 
 		it("should evaluate comparison operators", () => {
-			expect(evaluate("a > b", context)).toBe(true);
-			expect(evaluate("a === b", context)).toBe(false);
+			expect(evaluateExpression("a > b", context)).toBe(true);
+			expect(evaluateExpression("a === b", context)).toBe(false);
 		});
 
 		it("should evaluate logical operators", () => {
-			expect(evaluate("true && false")).toBe(false);
-			expect(evaluate("true || false")).toBe(true);
+			expect(evaluateExpression("true && false")).toBe(false);
+			expect(evaluateExpression("true || false")).toBe(true);
 		});
 	});
 
 	describe("Conditional Expressions", () => {
 		it("should evaluate simple conditionals", () => {
-			expect(evaluate("true ? 1 : 2")).toBe(1);
-			expect(evaluate("false ? 1 : 2")).toBe(2);
+			expect(evaluateExpression("true ? 1 : 2")).toBe(1);
+			expect(evaluateExpression("false ? 1 : 2")).toBe(2);
 		});
 
 		it("should evaluate nested conditionals", () => {
 			const input = "true ? false ? 1 : 2 : 3";
-			expect(evaluate(input)).toBe(2);
+			expect(evaluateExpression(input)).toBe(2);
 		});
 	});
 
@@ -118,22 +116,26 @@ describe("Interpreter", () => {
 
 		it("should evaluate complex expressions", () => {
 			const input = '@sum(data.values) > 5 ? data["status"] : "inactive"';
-			expect(evaluate(input, context, functions)).toBe("active");
+			expect(evaluateExpression(input, context, functions)).toBe("active");
 		});
 	});
 
 	describe("Error Handling", () => {
 		it("should throw for undefined variables", () => {
-			expect(() => evaluate("unknownVar")).toThrow("Undefined variable");
+			expect(() => evaluateExpression("unknownVar")).toThrow(
+				"Undefined variable",
+			);
 		});
 
 		it("should throw for undefined functions", () => {
-			expect(() => evaluate("@unknown()")).toThrow("Undefined function");
+			expect(() => evaluateExpression("@unknown()")).toThrow(
+				"Undefined function",
+			);
 		});
 
 		it("should throw for null property access", () => {
 			const context = { data: null };
-			expect(() => evaluate("data.value", context)).toThrow(
+			expect(() => evaluateExpression("data.value", context)).toThrow(
 				"Cannot access property of null",
 			);
 		});

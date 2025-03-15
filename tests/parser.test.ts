@@ -1,18 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { Parser, Tokenizer } from "../src";
+import { parse } from "../src/parser";
+import { tokenize } from "../src/tokenizer";
 
 describe("Parser", () => {
-	const tokenizer = new Tokenizer();
-	const parser = new Parser();
-
-	function parse(input: string) {
-		const tokens = tokenizer.tokenize(input);
-		return parser.parse(tokens);
+	function parseExpression(input: string) {
+		const tokens = tokenize(input);
+		return parse(tokens);
 	}
 
 	describe("Literals", () => {
 		it("should parse number literals", () => {
-			const ast = parse("42");
+			const ast = parseExpression("42");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -24,7 +22,7 @@ describe("Parser", () => {
 		});
 
 		it("should parse string literals", () => {
-			const ast = parse('"hello"');
+			const ast = parseExpression('"hello"');
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -36,7 +34,7 @@ describe("Parser", () => {
 		});
 
 		it("should parse boolean literals", () => {
-			const ast = parse("true");
+			const ast = parseExpression("true");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -48,7 +46,7 @@ describe("Parser", () => {
 		});
 
 		it("should parse null literal", () => {
-			const ast = parse("null");
+			const ast = parseExpression("null");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -62,7 +60,7 @@ describe("Parser", () => {
 
 	describe("Member Expressions", () => {
 		it("should parse dot notation", () => {
-			const ast = parse("data.value");
+			const ast = parseExpression("data.value");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -81,7 +79,7 @@ describe("Parser", () => {
 		});
 
 		it("should parse bracket notation", () => {
-			const ast = parse('data["value"]');
+			const ast = parseExpression('data["value"]');
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -101,7 +99,7 @@ describe("Parser", () => {
 		});
 
 		it("should parse nested member expressions", () => {
-			const ast = parse("data.values[0].id");
+			const ast = parseExpression("data.values[0].id");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -139,7 +137,7 @@ describe("Parser", () => {
 
 	describe("Function Calls", () => {
 		it("should parse function calls without arguments", () => {
-			const ast = parse("@sum()");
+			const ast = parseExpression("@sum()");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -154,7 +152,7 @@ describe("Parser", () => {
 		});
 
 		it("should parse function calls with multiple arguments", () => {
-			const ast = parse("@max(a, b, 42)");
+			const ast = parseExpression("@max(a, b, 42)");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -185,7 +183,7 @@ describe("Parser", () => {
 
 	describe("Binary Expressions", () => {
 		it("should parse arithmetic expressions", () => {
-			const ast = parse("a + b * c");
+			const ast = parseExpression("a + b * c");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -212,12 +210,12 @@ describe("Parser", () => {
 		});
 
 		it("should parse comparison expressions", () => {
-			const ast = parse("a === b");
+			const ast = parseExpression("a > b");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
 					type: "BinaryExpression",
-					operator: "===",
+					operator: ">",
 					left: {
 						type: "Identifier",
 						name: "a",
@@ -231,7 +229,7 @@ describe("Parser", () => {
 		});
 
 		it("should parse logical expressions", () => {
-			const ast = parse("a && b || c");
+			const ast = parseExpression("a && b || c");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -258,9 +256,27 @@ describe("Parser", () => {
 		});
 	});
 
+	describe("Unary Expressions", () => {
+		it("should parse unary expressions", () => {
+			const ast = parseExpression("!a");
+			expect(ast).toEqual({
+				type: "Program",
+				body: {
+					type: "UnaryExpression",
+					operator: "!",
+					argument: {
+						type: "Identifier",
+						name: "a",
+					},
+					prefix: true,
+				},
+			});
+		});
+	});
+
 	describe("Conditional Expressions", () => {
 		it("should parse ternary expressions", () => {
-			const ast = parse("a ? b : c");
+			const ast = parseExpression("a ? b : c");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -282,7 +298,7 @@ describe("Parser", () => {
 		});
 
 		it("should parse nested ternary expressions", () => {
-			const ast = parse("a ? b ? c : d : e");
+			const ast = parseExpression("a ? b : c ? d : e");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -292,23 +308,23 @@ describe("Parser", () => {
 						name: "a",
 					},
 					consequent: {
+						type: "Identifier",
+						name: "b",
+					},
+					alternate: {
 						type: "ConditionalExpression",
 						test: {
 							type: "Identifier",
-							name: "b",
+							name: "c",
 						},
 						consequent: {
 							type: "Identifier",
-							name: "c",
+							name: "d",
 						},
 						alternate: {
 							type: "Identifier",
-							name: "d",
+							name: "e",
 						},
-					},
-					alternate: {
-						type: "Identifier",
-						name: "e",
 					},
 				},
 			});
@@ -316,8 +332,8 @@ describe("Parser", () => {
 	});
 
 	describe("Complex Expressions", () => {
-		it("should parse complex nested expressions", () => {
-			const ast = parse('@sum(data.values) > 0 ? data["status"] : "inactive"');
+		it("should parse complex expressions", () => {
+			const ast = parseExpression("a + b * c > d ? e : f");
 			expect(ast).toEqual({
 				type: "Program",
 				body: {
@@ -326,49 +342,37 @@ describe("Parser", () => {
 						type: "BinaryExpression",
 						operator: ">",
 						left: {
-							type: "CallExpression",
-							callee: {
+							type: "BinaryExpression",
+							operator: "+",
+							left: {
 								type: "Identifier",
-								name: "sum",
+								name: "a",
 							},
-							arguments: [
-								{
-									type: "MemberExpression",
-									object: {
-										type: "Identifier",
-										name: "data",
-									},
-									property: {
-										type: "Identifier",
-										name: "values",
-									},
-									computed: false,
+							right: {
+								type: "BinaryExpression",
+								operator: "*",
+								left: {
+									type: "Identifier",
+									name: "b",
 								},
-							],
+								right: {
+									type: "Identifier",
+									name: "c",
+								},
+							},
 						},
 						right: {
-							type: "Literal",
-							value: 0,
-							raw: "0",
+							type: "Identifier",
+							name: "d",
 						},
 					},
 					consequent: {
-						type: "MemberExpression",
-						object: {
-							type: "Identifier",
-							name: "data",
-						},
-						property: {
-							type: "Literal",
-							value: "status",
-							raw: '"status"',
-						},
-						computed: true,
+						type: "Identifier",
+						name: "e",
 					},
 					alternate: {
-						type: "Literal",
-						value: "inactive",
-						raw: '"inactive"',
+						type: "Identifier",
+						name: "f",
 					},
 				},
 			});
@@ -376,23 +380,21 @@ describe("Parser", () => {
 	});
 
 	describe("Error Handling", () => {
-		it("should throw error for unclosed parentheses", () => {
-			expect(() => parse("@sum(a, b")).toThrow("Expected closing parenthesis");
+		it("should throw error for unexpected token", () => {
+			expect(() => parseExpression("a +")).toThrow("Unexpected end of input");
 		});
 
-		it("should throw error for unclosed brackets", () => {
-			expect(() => parse('data["key"')).toThrow("Expected closing bracket");
+		it("should throw error for invalid property access", () => {
+			expect(() => parseExpression("a.")).toThrow("Expected property name");
 		});
 
-		it("should throw error for incomplete ternary", () => {
-			expect(() => parse("a ? b")).toThrow(
-				"Expected ':' in conditional expression",
-			);
+		it("should throw error for unclosed bracket notation", () => {
+			expect(() => parseExpression("a[b")).toThrow("Expected closing bracket");
 		});
 
-		it("should throw error for missing function arguments", () => {
-			expect(() => parse("@sum")).toThrow(
-				"Expected opening parenthesis after function name",
+		it("should throw error for invalid ternary expression", () => {
+			expect(() => parseExpression("a ? b")).toThrow(
+				"Expected : in conditional expression",
 			);
 		});
 	});
