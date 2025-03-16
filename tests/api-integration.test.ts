@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	Expression,
-	ExpressionError,
-	createExpression,
-	evaluate,
-} from "../src";
+import { ExpressionError, compile, evaluate, register } from "../src";
 
 describe("API Integration Tests", () => {
 	describe("evaluate function", () => {
@@ -26,54 +21,32 @@ describe("API Integration Tests", () => {
 		it("should throw ExpressionError for invalid expressions", () => {
 			expect(() => evaluate("")).toThrow(ExpressionError);
 			expect(() => evaluate("x + y")).toThrow(ExpressionError);
-			expect(() => evaluate("@sum(1, 2)")).toThrow(ExpressionError);
 		});
 	});
 
-	describe("createExpression function", () => {
-		it("should create an Expression instance", () => {
-			const expr = createExpression("x + y");
-			expect(expr).toBeInstanceOf(Expression);
+	describe("compile function", () => {
+		it("should create a function that can be called with different contexts", () => {
+			const expr = compile("x + y");
+			expect(expr({ x: 10, y: 5 })).toBe(15);
+			expect(expr({ x: 20, y: 30 })).toBe(50);
 		});
 
-		it("should allow chaining methods", () => {
-			const expr = createExpression("x + y");
-			expect(expr.evaluate({ x: 10, y: 5 })).toBe(15);
+		it("should throw when compiling invalid expressions", () => {
+			expect(() => compile("")).toThrow(ExpressionError);
+			expect(() => compile("this.property")).toThrow(ExpressionError);
 		});
 	});
 
-	describe("Expression class", () => {
-		it("should evaluate expressions", () => {
-			const expr = new Expression("x + y");
-			expect(expr.evaluate({ x: 10, y: 5 })).toBe(15);
+	describe("register function", () => {
+		it("should register custom functions that can be used in expressions", () => {
+			register("sum", (...args) => args.reduce((a, b) => a + b, 0));
+			expect(evaluate("@sum(1, 2, 3)")).toBe(6);
 		});
 
-		it("should support configuration", () => {
-			const expr = new Expression("x + y").configure({
-				strictMode: true,
-				maxTimeout: 2000,
-			});
-			expect(expr.evaluate({ x: 10, y: 5 })).toBe(15);
-		});
-
-		it("should support compilation for better performance", () => {
-			const expr = new Expression("x + y").compile();
-			expect(expr.evaluate({ x: 10, y: 5 })).toBe(15);
-			expect(expr.evaluate({ x: 20, y: 30 })).toBe(50);
-		});
-
-		it("should throw when extending functions in strict mode", () => {
-			const expr = new Expression("@sum(1, 2, 3)");
-			expect(() =>
-				expr.extend({ sum: (...args) => args.reduce((a, b) => a + b, 0) }),
-			).toThrow(ExpressionError);
-		});
-
-		it("should support custom functions when strict mode is disabled", () => {
-			const expr = new Expression("@sum(1, 2, 3)")
-				.configure({ strictMode: false })
-				.extend({ sum: (...args) => args.reduce((a, b) => a + b, 0) });
-			expect(expr.evaluate({})).toBe(6);
+		it("should allow registered functions to be used in compiled expressions", () => {
+			register("multiply", (a, b) => a * b);
+			const expr = compile("@multiply(x, y)");
+			expect(expr({ x: 10, y: 5 })).toBe(50);
 		});
 	});
 
@@ -167,33 +140,28 @@ describe("API Integration Tests", () => {
 		it("should provide detailed error information", () => {
 			try {
 				evaluate("x +");
+				expect(true).toBe(false); // This will fail the test if evaluate doesn't throw
 			} catch (error) {
 				expect(error).toBeInstanceOf(ExpressionError);
 				expect(error.message).toBeDefined();
 			}
-		});
-
-		it("should handle timeout for infinite loops", () => {
-			// This test would need a way to create an expression that causes an infinite loop
-			// For now, we'll just verify the maxTimeout option exists
-			const expr = new Expression("x + y").configure({ maxTimeout: 100 });
-			expect(expr.evaluate({ x: 1, y: 2 })).toBe(3);
 		});
 	});
 
 	describe("Security Features", () => {
 		it("should prevent access to global objects", () => {
 			// Testing that we can't access window/global objects
-			// This is more of a conceptual test since the library should prevent this by design
-			const expr = createExpression("x + y");
-			expect(expr.evaluate({ x: 10, y: 5 })).toBe(15);
+			expect(() => evaluate("window")).toThrow(ExpressionError);
+			expect(() => evaluate("global")).toThrow(ExpressionError);
 		});
 
 		it("should prevent prototype chain access", () => {
 			// Testing that we can't access prototype methods
-			// Again, this is more of a conceptual test
 			const context = { obj: {} };
-			expect(() => evaluate("obj.constructor", context)).toThrow();
+			expect(() => evaluate("obj.constructor", context)).toThrow(
+				ExpressionError,
+			);
+			expect(() => evaluate("obj.__proto__", context)).toThrow(ExpressionError);
 		});
 	});
 });

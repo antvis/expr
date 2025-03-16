@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-	Expression,
 	ExpressionError,
-	createExpression,
+	compile,
 	evaluate,
+	register,
 } from "../src";
 
 describe("Edge Cases and Advanced Scenarios", () => {
@@ -81,22 +81,14 @@ describe("Edge Cases and Advanced Scenarios", () => {
 
 	describe("Complex Function Usage", () => {
 		it("should support nested function calls", () => {
-			const expr = createExpression("@outer(@inner(x, y), z)")
-				.configure({ strictMode: false })
-				.extend({
-					inner: (a, b) => a + b,
-					outer: (a, b) => a * b,
-				});
-			expect(expr.evaluate({ x: 2, y: 3, z: 4 })).toBe(20); // (2+3)*4 = 20
+			register("inner", (a, b) => a + b);
+			register("outer", (a, b) => a * b);
+			expect(evaluate("@outer(@inner(x, y), z)", { x: 2, y: 3, z: 4 })).toBe(20); // (2+3)*4 = 20
 		});
 
 		it("should handle function calls with complex expressions as arguments", () => {
-			const expr = createExpression("@calculate(x + y, z * 2, w ? 1 : 0)")
-				.configure({ strictMode: false })
-				.extend({
-					calculate: (a, b, c) => a + b + c,
-				});
-			expect(expr.evaluate({ x: 1, y: 2, z: 3, w: true })).toBe(10); // (1+2) + (3*2) + 1 = 10
+			register("calculate", (a, b, c) => a + b + c);
+			expect(evaluate("@calculate(x + y, z * 2, w ? 1 : 0)", { x: 1, y: 2, z: 3, w: true })).toBe(10); // (1+2) + (3*2) + 1 = 10
 		});
 	});
 
@@ -115,12 +107,12 @@ describe("Edge Cases and Advanced Scenarios", () => {
 
 	describe("Performance Considerations", () => {
 		it("should benefit from pre-compilation", () => {
-			const expr = createExpression("x + y").compile();
-
+			const expr = compile("x + y");
+			
 			// This is more of a conceptual test since we can't easily measure performance in a unit test
 			// But we can verify that the compiled expression works correctly
-			expect(expr.evaluate({ x: 1, y: 2 })).toBe(3);
-			expect(expr.evaluate({ x: 10, y: 20 })).toBe(30);
+			expect(expr({ x: 1, y: 2 })).toBe(3);
+			expect(expr({ x: 10, y: 20 })).toBe(30);
 		});
 	});
 
@@ -151,10 +143,10 @@ describe("Edge Cases and Advanced Scenarios", () => {
 
 		it("should handle potentially dangerous property names", () => {
 			const context = {
-				obj: { __proto__: "fake", constructor: "fake" },
+				obj: { "__proto__": "fake", "constructor": "fake" }
 			};
-
-			// These should just access the properties, not the actual __proto__ or constructor
+			
+			// These should throw errors due to blacklisted keywords
 			expect(() => evaluate("obj.__proto__", context)).toThrow();
 			expect(() => evaluate("obj.constructor", context)).toThrow();
 		});

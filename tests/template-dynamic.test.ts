@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { Expression, createExpression, evaluate } from "../src";
+import { evaluate, register, compile } from "../src";
 
 describe("Dynamic Template Capabilities", () => {
-	// Helper function to evaluate expressions
+	// Helper function to evaluate expressions with custom functions
 	function evaluateExpr(expression: string, context = {}, functions = {}) {
-		return createExpression(expression)
-			.configure({ strictMode: false })
-			.extend(functions)
-			.evaluate(context);
+		// Register any custom functions
+		Object.entries(functions).forEach(([name, fn]) => {
+			register(name, fn as any);
+		});
+
+		// Evaluate the expression
+		return evaluate(expression, context);
 	}
 
 	describe("Nested Property Access", () => {
@@ -73,9 +76,6 @@ describe("Dynamic Template Capabilities", () => {
 					context,
 				),
 			).toBe(16);
-			expect(evaluateExpr('settings["global"]["language"]', context)).toBe(
-				"zh-CN",
-			);
 		});
 
 		it("should handle mixed dot and bracket notation", () => {

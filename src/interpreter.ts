@@ -11,8 +11,10 @@ import type {
 	UnaryExpression,
 } from "./parser";
 
-export type Context = Record<string, unknown>;
-export type Functions = Record<string, (...args: unknown[]) => unknown>;
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export type Context = Record<string, any>;
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export type Functions = Record<string, (...args: any[]) => any>;
 
 /**
  * InterpreterState represents the current state of interpretation
@@ -37,27 +39,6 @@ export const createInterpreterState = (
 	return {
 		context,
 		functions,
-	};
-};
-
-/**
- * Sets a function in the interpreter state
- * @param state - Current interpreter state
- * @param name - Function name
- * @param fn - Function implementation
- * @returns Updated interpreter state
- */
-export const setFunction = (
-	state: InterpreterState,
-	name: string,
-	fn: (...args: unknown[]) => unknown,
-): InterpreterState => {
-	return {
-		...state,
-		functions: {
-			...state.functions,
-			[name]: fn,
-		},
 	};
 };
 
