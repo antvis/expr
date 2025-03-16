@@ -95,7 +95,6 @@ const result = evaluate("(a + b) * c", { a: 5, b: 3, c: 2 }); // returns 16
 // Modulo operation
 const result = evaluate("a % b", { a: 10, b: 3 }); // returns 1
 
-// Power operation
 const result = evaluate("a ^ b", { a: 2, b: 3 }); // returns 8
 ```
 
@@ -111,12 +110,12 @@ const result = evaluate("isActive && !isDeleted", {
 }); // returns true
 
 // Logical OR
-const result = evaluate("status == 'active' || status == 'pending'", { 
+const result = evaluate("status === 'active' || status === 'pending'", { 
   status: 'pending' 
 }); // returns true
 
 // Combined logical expressions
-const result = evaluate("(age >= 18 && status == 'active') || isAdmin", { 
+const result = evaluate("(age >= 18 && status === 'active') || isAdmin", { 
   age: 16, status: 'inactive', isAdmin: true 
 }); // returns true
 ```
@@ -185,7 +184,7 @@ const expr = createExpression('someExpression')
 | Category | Operators | Example |
 |----------|-----------|--------|
 | Arithmetic | `+`, `-`, `*`, `/`, `%`, `^` (power) | `2 + 3 * 4` |
-| Comparison | `==`, `!=`, `>`, `>=`, `<`, `<=` | `age >= 18` |
+| Comparison | `===`, `!==`, `>`, `>=`, `<`, `<=` | `age >= 18` |
 | Logical | `&&`, `||`, `!` | `isActive && !isDeleted` |
 | Conditional | `? :` | `age >= 18 ? 'adult' : 'minor'` |
 | Member Access | `.` and `[]` | `user.profile.name`, `items[0]` |
