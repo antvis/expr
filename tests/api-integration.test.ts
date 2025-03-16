@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-	evaluate,
-	createExpression,
-	ExpressionError,
 	Expression,
+	ExpressionError,
+	createExpression,
+	evaluate,
 } from "../src";
 
 describe("API Integration Tests", () => {

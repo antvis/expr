@@ -17,11 +17,11 @@ const context = {
 		{ id: 2, name: "Phone", price: 800 },
 		{ id: 3, name: "Tablet", price: 500 },
 	],
-	calculateTotal: function (items: any[]) {
+	calculateTotal: (items: any[]) => {
 		const total = items.reduce((sum, item) => sum + item.price, 0);
 		return total;
 	},
-	applyDiscount: function (total: number, percentage: number) {
+	applyDiscount: (total: number, percentage: number) => {
 		const value = total * (1 - percentage / 100);
 		return value;
 	},

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-	evaluate,
-	createExpression,
-	ExpressionError,
 	Expression,
+	ExpressionError,
+	createExpression,
+	evaluate,
 } from "../src";
 
 describe("Edge Cases and Advanced Scenarios", () => {
@@ -126,8 +126,8 @@ describe("Edge Cases and Advanced Scenarios", () => {
 
 	describe("Error Cases", () => {
 		it("should handle division by zero", () => {
-			expect(evaluate("10 / 0")).toBe(Infinity);
-			expect(evaluate("-10 / 0")).toBe(-Infinity);
+			expect(evaluate("10 / 0")).toBe(Number.POSITIVE_INFINITY);
+			expect(evaluate("-10 / 0")).toBe(Number.NEGATIVE_INFINITY);
 		});
 
 		it("should handle invalid property access", () => {
