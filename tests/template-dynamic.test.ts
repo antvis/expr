@@ -198,7 +198,7 @@ describe("Dynamic Template Capabilities", () => {
 		// Define custom functions for string operations
 		const functions = {
 			concat: (...strings: string[]) => strings.join(""),
-			formatDate: (date: string, format: string = "YYYY-MM-DD") => {
+			formatDate: (date: string, format = "YYYY-MM-DD") => {
 				// Simple date formatter (in real implementation, use a proper date library)
 				const d = new Date(date);
 				if (format === "YYYY-MM-DD") {

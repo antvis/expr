@@ -1,11 +1,20 @@
 import {
 	type Context,
 	createInterpreterState,
-	evaluate as evaluateAst,
+	evaluateAst,
 	setFunction,
 } from "./interpreter";
 import { type Program, parse } from "./parser";
 import { tokenize } from "./tokenizer";
+
+const blackList = new Set([
+	"constructor",
+	"__proto__",
+	"prototype",
+	"this",
+	"window",
+	"global",
+]);
 
 export interface EvaluatorOptions {
 	strictMode?: boolean;
@@ -222,6 +231,15 @@ export function createExpression(expression: string): Expression {
 }
 
 export function evaluate(expression: string, context: Context = {}) {
+	const blackListRegexp = new RegExp(
+		`\\b(${Array.from(blackList).join("\\b|\\b")})\\b`,
+		"g",
+	);
+
+	if (blackListRegexp.test(expression)) {
+		throw new ExpressionError("Blacklisted keywords detected in expression");
+	}
+
 	const state = createExpressionState(expression);
 	return evaluateExpression(state, context);
 }

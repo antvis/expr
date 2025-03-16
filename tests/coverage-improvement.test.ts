@@ -5,10 +5,7 @@ import {
 	createExpression,
 	evaluate,
 } from "../src";
-import {
-	createInterpreterState,
-	evaluate as evaluateAst,
-} from "../src/interpreter";
+import { createInterpreterState, evaluateAst } from "../src/interpreter";
 import { parse } from "../src/parser";
 import { tokenize } from "../src/tokenizer";
 

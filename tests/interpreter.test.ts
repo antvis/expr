@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createInterpreterState, evaluate } from "../src/interpreter";
+import { createInterpreterState, evaluateAst } from "../src/interpreter";
 import { parse } from "../src/parser";
 import { tokenize } from "../src/tokenizer";
 
@@ -8,7 +8,7 @@ describe("Interpreter", () => {
 		const tokens = tokenize(input);
 		const ast = parse(tokens);
 		const interpreterState = createInterpreterState({}, functions);
-		return evaluate(ast, interpreterState, context);
+		return evaluateAst(ast, interpreterState, context);
 	}
 
 	describe("Literals", () => {

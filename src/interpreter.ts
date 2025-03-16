@@ -71,7 +71,7 @@ export const setFunction = (
  * const ast = parse(tokens);
  * const result = evaluate(ast, state);
  */
-export const evaluate = (
+export const evaluateAst = (
 	ast: Program,
 	state: InterpreterState,
 	context?: Context,
