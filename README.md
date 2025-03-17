@@ -178,24 +178,53 @@ const result = evaluate('@formatCurrency(price * quantity)', {
 
 Performance comparison of different evaluation methods: (baseline: new Function)
 
-| Expression Type       | new Function vs evaluate after compile | new Function vs evaluate without compile | new Function vs [expr-eval](https://www.npmjs.com/package/expr-eval?activeTab=readme) Parser |
-|-----------------------|----------------------------------------|------------------------------------------|----------------------------------|
-| Simple Expressions    | 1.59x faster                          | 6.36x faster                             | 23.94x faster                    |
-| Medium Expressions    | 2.16x faster                          | 9.81x faster                            | 37.81x faster                    |
-| Complex Expressions   | 1.59x faster                          | 4.89x faster                             | 32.74x faster                    |
-
-```mermaid
-pie title Performance Comparison (Baseline: new Function)
-    "Simple - evaluate after compile (1.59x)" : 1.59
-    "Simple - evaluate without compile (6.36x)" : 6.36
-    "Simple - expr-eval Parser (23.94x)" : 23.94
-    "Medium - evaluate after compile (2.16x)" : 2.16
-    "Medium - evaluate without compile (9.81x)" : 9.81
-    "Medium - expr-eval Parser (37.81x)" : 37.81
-    "Complex - evaluate after compile (1.59x)" : 1.59
-    "Complex - evaluate without compile (4.89x)" : 4.89
-    "Complex - expr-eval Parser (32.74x)" : 32.74
-```
+<div style="text-align: center;">
+  <h3>Performance Comparison (Baseline: new Function)</h3>
+  <table style="margin: 0 auto; border-collapse: collapse;">
+    <tr>
+      <th style="padding: 8px; text-align: left;">Expression Type</th>
+      <th style="padding: 8px; text-align: left;">new Function vs evaluate after compile</th>
+      <th style="padding: 8px; text-align: left;">new Function vs evaluate without compile</th>
+      <th style="padding: 8px; text-align: left;">new Function vs expr-eval Parser</th>
+    </tr>
+    <tr>
+      <td style="padding: 8px;">Simple Expressions</td>
+      <td>
+        <div style="background-color: #4CAF50; width: 15.9%; height: 20px; text-align: center; color: white;">1.59x</div>
+      </td>
+      <td>
+        <div style="background-color: #2196F3; width: 63.6%; height: 20px; text-align: center; color: white;">6.36x</div>
+      </td>
+      <td>
+        <div style="background-color: #f44336; width: 100%; height: 20px; text-align: center; color: white;">23.94x</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px;">Medium Expressions</td>
+      <td>
+        <div style="background-color: #4CAF50; width: 21.6%; height: 20px; text-align: center; color: white;">2.16x</div>
+      </td>
+      <td>
+        <div style="background-color: #2196F3; width: 98.1%; height: 20px; text-align: center; color: white;">9.81x</div>
+      </td>
+      <td>
+        <div style="background-color: #f44336; width: 100%; height: 20px; text-align: center; color: white;">37.81x</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px;">Complex Expressions</td>
+      <td>
+        <div style="background-color: #4CAF50; width: 15.9%; height: 20px; text-align: center; color: white;">1.59x</div>
+      </td>
+      <td>
+        <div style="background-color: #2196F3; width: 48.9%; height: 20px; text-align: center; color: white;">4.89x</div>
+      </td>
+      <td>
+        <div style="background-color: #f44336; width: 100%; height: 20px; text-align: center; color: white;">32.74x</div>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ## Advanced Usage
 
