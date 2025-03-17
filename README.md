@@ -185,7 +185,7 @@ Performance comparison of different evaluation methods: (baseline: new Function)
 | Complex Expressions   | 1.59x faster                          | 4.89x faster                             | 32.74x faster                    |
 
 ```mermaid
-bar
+histogram
     title Performance Comparison (Baseline: new Function)
     "Simple - evaluate after compile" : 1.59
     "Simple - evaluate without compile" : 6.36
@@ -196,7 +196,6 @@ bar
     "Complex - evaluate after compile" : 1.59
     "Complex - evaluate without compile" : 4.89
     "Complex - expr-eval Parser" : 32.74
-
 ```
 
 ## Advanced Usage
