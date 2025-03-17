@@ -1,5 +1,5 @@
-import { ExpressionError } from "./index";
 import type { Token } from "./tokenizer";
+import { ExpressionError } from "./utils";
 
 /**
  * All possible node types in the Abstract Syntax Tree (AST)

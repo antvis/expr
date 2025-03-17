@@ -1,4 +1,3 @@
-import { ExpressionError } from "./index";
 import type {
 	BinaryExpression,
 	CallExpression,
@@ -10,6 +9,7 @@ import type {
 	Program,
 	UnaryExpression,
 } from "./parser";
+import { ExpressionError } from "./utils";
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type Context = Record<string, any>;
