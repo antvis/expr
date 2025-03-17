@@ -185,22 +185,22 @@ Performance comparison of different evaluation methods: (baseline: new Function)
 | Complex Expressions   | 1.59x faster                          | 4.89x faster                             | 32.74x faster                    |
 
 ```mermaid
-bar
-    title Performance Comparison (Baseline: new Function)
-    x-axis Expression Type
-    y-axis Speed Multiplier
-    bar Simple Expressions
-        new Function vs evaluate after compile: 1.59
-        new Function vs evaluate without compile: 6.36
-        new Function vs expr-eval Parser: 23.94
-    bar Medium Expressions
-        new Function vs evaluate after compile: 2.16
-        new Function vs evaluate without compile: 9.81
-        new Function vs expr-eval Parser: 37.81
-    bar Complex Expressions
-        new Function vs evaluate after compile: 1.59
-        new Function vs evaluate without compile: 4.89
-        new Function vs expr-eval Parser: 32.74
+graph LR
+    A[Simple Expressions] -->|1.59x faster|> B[new Function vs evaluate after compile]
+    A -->|6.36x faster|> C[new Function vs evaluate without compile]
+    A -->|23.94x faster|> D[new Function vs expr-eval Parser]
+    E[Medium Expressions] -->|2.16x faster|> B
+    E -->|9.81x faster|> C
+    E -->|37.81x faster|> D
+    F[Complex Expressions] -->|1.59x faster|> B
+    F -->|4.89x faster|> C
+    F -->|32.74x faster|> D
+    style A fill:#f9f,stroke:#333,stroke-width:4px
+    style B fill:#f9f,stroke:#333,stroke-width:4px
+    style C fill:#f9f,stroke:#333,stroke-width:4px
+    style D fill:#f9f,stroke:#333,stroke-width:4px
+    style E fill:#f9f,stroke:#333,stroke-width:4px
+    style F fill:#f9f,stroke:#333,stroke-width:4px
 ```
 
 ## Advanced Usage
