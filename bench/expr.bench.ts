@@ -1,3 +1,4 @@
+import { Parser } from "expr-eval";
 import { bench, describe } from "vitest";
 import { compile, evaluate, register } from "../dist/index.esm.js";
 
@@ -42,6 +43,10 @@ const complexExpressionCompiler = compile(complexExpression);
 register("calculateTotal", context.calculateTotal);
 register("applyDiscount", context.applyDiscount);
 
+const parser = new Parser();
+parser.functions.calculateTotal = context.calculateTotal;
+parser.functions.applyDiscount = context.applyDiscount;
+
 const newFunctionSimple = new Function(
 	"context",
 	`with(context) { return ${simpleExpression}; }`,
@@ -70,6 +75,11 @@ describe("Simple Expression Benchmarks", () => {
 			evaluate(simpleExpression, context);
 		},
 	);
+
+	bench("expr-eval Parser (vs evaluate)", () => {
+		// @ts-ignore
+		Parser.evaluate(simpleExpression, context);
+	});
 });
 
 describe("Medium Expression Benchmarks", () => {
@@ -87,6 +97,11 @@ describe("Medium Expression Benchmarks", () => {
 			evaluate(mediumExpression, context);
 		},
 	);
+
+	bench("expr-eval Parser (vs evaluate)", () => {
+		// @ts-ignore
+		Parser.evaluate(mediumExpression, context);
+	});
 });
 
 describe("Complex Expression Benchmarks", () => {
@@ -104,4 +119,9 @@ describe("Complex Expression Benchmarks", () => {
 			evaluate(complexExpression2, context);
 		},
 	);
+
+	bench("expr-eval Parser (vs evaluate)", () => {
+		// @ts-ignore
+		parser.evaluate(complexExpression2, context);
+	});
 });

@@ -9,7 +9,7 @@ Now we have solved this problem for you. We have designed a simple and easy-to-u
 - 🔒 **Secure by default** - No access to global objects or prototype chain, does not use `eval` or `new Function`
 - 🚀 **High performance** - Supports pre-compilation of expressions for improved performance with repeated evaluations
 - 🛠️ **Extensible** - Register custom functions to easily extend functionality
-- 🪩 **Lightweight** - Zero dependencies, small footprint
+- 🪩 **Lightweight** - Zero dependencies, small footprint, only 7.8KB
 
 ## Installation
 
@@ -173,6 +173,17 @@ const result = evaluate('@formatCurrency(price * quantity)', {
 }); // returns '$31.50'
 ```
 **Default Global Functions:** `['abs', 'ceil', 'floor', 'round', 'sqrt', 'pow', 'max', 'min']`
+
+## Benchmarks
+
+Performance comparison of different evaluation methods: (baseline: new Function)
+
+| Expression Type       | new Function vs evaluate after compile | new Function vs evaluate without compile | new Function vs [expr-eval](https://www.npmjs.com/package/expr-eval?activeTab=readme) Parser |
+|-----------------------|----------------------------------------|------------------------------------------|----------------------------------|
+| Simple Expressions    | 1.59x faster                          | 6.36x faster                             | 23.94x faster                    |
+| Medium Expressions    | 2.16x faster                          | 9.81x faster                            | 37.81x faster                    |
+| Complex Expressions   | 1.59x faster                          | 4.89x faster                             | 32.74x faster                    |
+
 
 ## Advanced Usage
 
