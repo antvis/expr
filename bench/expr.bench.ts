@@ -1,9 +1,5 @@
 import { bench, describe } from "vitest";
-import { evaluate, register } from "../src";
-import { createInterpreterState } from "../src/interpreter";
-import { evaluateAst } from "../src/interpreter";
-import { parse } from "../src/parser";
-import { tokenize } from "../src/tokenizer";
+import { compile, evaluate, register } from "../src";
 
 const context = {
 	user: {
@@ -31,20 +27,6 @@ const context = {
 	},
 };
 
-const state = createInterpreterState(
-	{},
-	{
-		calculateTotal: context.calculateTotal,
-		applyDiscount: context.applyDiscount,
-	},
-);
-
-const evaluateSync = (expr: string, context: any) => {
-	const tokens = tokenize(expr);
-	const ast = parse(tokens);
-	return evaluateAst(ast, state, context);
-};
-
 // 测试表达式
 const simpleExpression = "user.age + 5";
 const mediumExpression = 'user.scores[2] > 80 ? "Good" : "Needs improvement"';
@@ -53,6 +35,10 @@ const complexExpression =
 
 const complexExpression2 =
 	'applyDiscount(calculateTotal(products), 10) > 2000 ? "High value" : "Standard"';
+
+const simpleExpressionCompiler = compile(simpleExpression);
+const mediumExpressionCompiler = compile(mediumExpression);
+const complexExpression2Compiler = compile(complexExpression);
 
 register("calculateTotal", context.calculateTotal);
 register("applyDiscount", context.applyDiscount);
@@ -72,43 +58,43 @@ const newFunctionComplex = new Function(
 );
 
 describe("Simple Expression Benchmarks", () => {
-	bench("evaluate (baseline)", async () => {
-		await evaluate(simpleExpression, context);
+	bench("evaluate after compile (baseline)", () => {
+		simpleExpressionCompiler(context);
 	});
 
 	bench("new Function (vs evaluate)", () => {
 		newFunctionSimple(context);
 	});
 
-	bench("evaluateSync (vs evaluate)", () => {
-		evaluateSync(simpleExpression, context);
+	bench("evaluate without compile (vs evaluate)", () => {
+		evaluate(simpleExpression, context);
 	});
 });
 
 describe("Medium Expression Benchmarks", () => {
-	bench("evaluate (baseline)", async () => {
-		await evaluate(mediumExpression, context);
+	bench("evaluate after compile (baseline)", () => {
+		mediumExpressionCompiler(context);
 	});
 
 	bench("new Function (vs evaluate)", () => {
 		newFunctionMedium(context);
 	});
 
-	bench("evaluateSync (vs evaluate)", () => {
-		evaluateSync(mediumExpression, context);
+	bench("evaluate without compile (vs evaluate)", () => {
+		evaluate(mediumExpression, context);
 	});
 });
 
 describe("Complex Expression Benchmarks", () => {
-	bench("evaluate (baseline)", async () => {
-		await evaluate(complexExpression, context);
+	bench("evaluate after compile (baseline)", () => {
+		complexExpression2Compiler(context);
 	});
 
 	bench("new Function (vs evaluate)", () => {
 		newFunctionComplex(context);
 	});
 
-	bench("evaluateSync (vs evaluate)", () => {
-		evaluateSync(complexExpression, context);
+	bench("evaluate without compile (vs evaluate)", () => {
+		evaluate(complexExpression2, context);
 	});
 });

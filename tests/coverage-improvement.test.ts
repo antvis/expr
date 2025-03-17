@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ExpressionError, compileSync, evaluate, register } from "../src";
+import { ExpressionError, compile, evaluate, register } from "../src";
 import { createInterpreterState, evaluateAst } from "../src/interpreter";
 import { parse } from "../src/parser";
 import { tokenize } from "../src/tokenizer";
@@ -14,7 +14,7 @@ describe("Coverage Improvement Tests", () => {
 					throw new Error("Generic error");
 				});
 
-			expect(async () => await evaluate("a + b", {})).rejects.toThrow();
+			expect(() => evaluate("a + b", {})).toThrow();
 
 			// Restore the original function
 			originalEvaluate.mockRestore();
@@ -28,20 +28,18 @@ describe("Coverage Improvement Tests", () => {
 					throw "Not an error object";
 				});
 
-			expect(async () => await evaluate("a + b", {})).rejects.toThrow();
+			expect(() => evaluate("a + b", {})).toThrow();
 
 			// Restore the original function
 			originalEvaluate.mockRestore();
 		});
 
 		it("should handle empty expressions", () => {
-			expect(async () => await evaluate("")).rejects.toThrow(
-				"Cannot evaluate empty expression",
-			);
+			expect(() => evaluate("")).toThrow("Unexpected end of input");
 		});
 
 		it("should compile expressions correctly", () => {
-			const compiled = compileSync("a + b");
+			const compiled = compile("a + b");
 			expect(compiled).toBeDefined();
 			expect(typeof compiled).toBe("function");
 		});
