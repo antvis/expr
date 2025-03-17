@@ -9,7 +9,7 @@ Now we have solved this problem for you. We have designed a simple and easy-to-u
 - 🔒 **Secure by default** - No access to global objects or prototype chain, does not use `eval` or `new Function`
 - 🚀 **High performance** - Supports pre-compilation of expressions for improved performance with repeated evaluations
 - 🛠️ **Extensible** - Register custom functions to easily extend functionality
-- 🪩 **Lightweight** - Zero dependencies, small footprint, only 7.8KB
+- 🪩 **Lightweight** - Zero dependencies, small footprint, only `7.8KB`
 
 ## Installation
 
@@ -184,6 +184,24 @@ Performance comparison of different evaluation methods: (baseline: new Function)
 | Medium Expressions    | 2.16x faster                          | 9.81x faster                            | 37.81x faster                    |
 | Complex Expressions   | 1.59x faster                          | 4.89x faster                             | 32.74x faster                    |
 
+```mermaid
+bar
+    title Performance Comparison (Baseline: new Function)
+    x-axis Expression Type
+    y-axis Speed Multiplier
+    bar Simple Expressions
+        new Function vs evaluate after compile: 1.59
+        new Function vs evaluate without compile: 6.36
+        new Function vs expr-eval Parser: 23.94
+    bar Medium Expressions
+        new Function vs evaluate after compile: 2.16
+        new Function vs evaluate without compile: 9.81
+        new Function vs expr-eval Parser: 37.81
+    bar Complex Expressions
+        new Function vs evaluate after compile: 1.59
+        new Function vs evaluate without compile: 4.89
+        new Function vs expr-eval Parser: 32.74
+```
 
 ## Advanced Usage
 
