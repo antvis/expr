@@ -185,17 +185,26 @@ Performance comparison of different evaluation methods: (baseline: new Function)
 | Complex Expressions   | 1.59x faster                          | 4.89x faster                             | 32.74x faster                    |
 
 ```mermaid
-histogram
+gantt
     title Performance Comparison (Baseline: new Function)
-    "Simple - evaluate after compile" : 1.59
-    "Simple - evaluate without compile" : 6.36
-    "Simple - expr-eval Parser" : 23.94
-    "Medium - evaluate after compile" : 2.16
-    "Medium - evaluate without compile" : 9.81
-    "Medium - expr-eval Parser" : 37.81
-    "Complex - evaluate after compile" : 1.59
-    "Complex - evaluate without compile" : 4.89
-    "Complex - expr-eval Parser" : 32.74
+    dateFormat  X
+    axisFormat %s
+
+    section Simple
+    evaluate after compile    :done, 0, 1.59
+    evaluate without compile  :done, 0, 6.36
+    expr-eval Parser          :done, 0, 23.94
+
+    section Medium
+    evaluate after compile    :done, 0, 2.16
+    evaluate without compile  :done, 0, 9.81
+    expr-eval Parser          :done, 0, 37.81
+
+    section Complex
+    evaluate after compile    :done, 0, 1.59
+    evaluate without compile  :done, 0, 4.89
+    expr-eval Parser          :done, 0, 32.74
+
 ```
 
 ## Advanced Usage
