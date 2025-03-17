@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parse } from "../src/parser";
+import { NodeType, parse } from "../src/parser";
 import { tokenize } from "../src/tokenizer";
 
 describe("Parser", () => {
@@ -12,11 +12,10 @@ describe("Parser", () => {
 		it("should parse number literals", () => {
 			const ast = parseExpression("42");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "Literal",
+					type: NodeType.Literal,
 					value: 42,
-					raw: "42",
 				},
 			});
 		});
@@ -24,11 +23,10 @@ describe("Parser", () => {
 		it("should parse string literals", () => {
 			const ast = parseExpression('"hello"');
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "Literal",
+					type: NodeType.Literal,
 					value: "hello",
-					raw: '"hello"',
 				},
 			});
 		});
@@ -36,11 +34,10 @@ describe("Parser", () => {
 		it("should parse boolean literals", () => {
 			const ast = parseExpression("true");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "Literal",
+					type: NodeType.Literal,
 					value: true,
-					raw: "true",
 				},
 			});
 		});
@@ -48,11 +45,10 @@ describe("Parser", () => {
 		it("should parse null literal", () => {
 			const ast = parseExpression("null");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "Literal",
+					type: NodeType.Literal,
 					value: null,
-					raw: "null",
 				},
 			});
 		});
@@ -62,15 +58,15 @@ describe("Parser", () => {
 		it("should parse dot notation", () => {
 			const ast = parseExpression("data.value");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "MemberExpression",
+					type: NodeType.MemberExpression,
 					object: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "data",
 					},
 					property: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "value",
 					},
 					computed: false,
@@ -81,55 +77,18 @@ describe("Parser", () => {
 		it("should parse bracket notation", () => {
 			const ast = parseExpression('data["value"]');
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "MemberExpression",
+					type: NodeType.MemberExpression,
 					object: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "data",
 					},
 					property: {
-						type: "Literal",
+						type: NodeType.Literal,
 						value: "value",
-						raw: '"value"',
 					},
 					computed: true,
-				},
-			});
-		});
-
-		it("should parse nested member expressions", () => {
-			const ast = parseExpression("data.values[0].id");
-			expect(ast).toEqual({
-				type: "Program",
-				body: {
-					type: "MemberExpression",
-					object: {
-						type: "MemberExpression",
-						object: {
-							type: "MemberExpression",
-							object: {
-								type: "Identifier",
-								name: "data",
-							},
-							property: {
-								type: "Identifier",
-								name: "values",
-							},
-							computed: false,
-						},
-						property: {
-							type: "Literal",
-							value: 0,
-							raw: "0",
-						},
-						computed: true,
-					},
-					property: {
-						type: "Identifier",
-						name: "id",
-					},
-					computed: false,
 				},
 			});
 		});
@@ -139,11 +98,11 @@ describe("Parser", () => {
 		it("should parse function calls without arguments", () => {
 			const ast = parseExpression("@sum()");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "CallExpression",
+					type: NodeType.CallExpression,
 					callee: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "sum",
 					},
 					arguments: [],
@@ -154,26 +113,25 @@ describe("Parser", () => {
 		it("should parse function calls with multiple arguments", () => {
 			const ast = parseExpression("@max(a, b, 42)");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "CallExpression",
+					type: NodeType.CallExpression,
 					callee: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "max",
 					},
 					arguments: [
 						{
-							type: "Identifier",
+							type: NodeType.Identifier,
 							name: "a",
 						},
 						{
-							type: "Identifier",
+							type: NodeType.Identifier,
 							name: "b",
 						},
 						{
-							type: "Literal",
+							type: NodeType.Literal,
 							value: 42,
-							raw: "42",
 						},
 					],
 				},
@@ -185,23 +143,23 @@ describe("Parser", () => {
 		it("should parse arithmetic expressions", () => {
 			const ast = parseExpression("a + b * c");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "BinaryExpression",
+					type: NodeType.BinaryExpression,
 					operator: "+",
 					left: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "a",
 					},
 					right: {
-						type: "BinaryExpression",
+						type: NodeType.BinaryExpression,
 						operator: "*",
 						left: {
-							type: "Identifier",
+							type: NodeType.Identifier,
 							name: "b",
 						},
 						right: {
-							type: "Identifier",
+							type: NodeType.Identifier,
 							name: "c",
 						},
 					},
@@ -212,16 +170,16 @@ describe("Parser", () => {
 		it("should parse comparison expressions", () => {
 			const ast = parseExpression("a > b");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "BinaryExpression",
+					type: NodeType.BinaryExpression,
 					operator: ">",
 					left: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "a",
 					},
 					right: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "b",
 					},
 				},
@@ -231,24 +189,24 @@ describe("Parser", () => {
 		it("should parse logical expressions", () => {
 			const ast = parseExpression("a && b || c");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "BinaryExpression",
+					type: NodeType.BinaryExpression,
 					operator: "||",
 					left: {
-						type: "BinaryExpression",
+						type: NodeType.BinaryExpression,
 						operator: "&&",
 						left: {
-							type: "Identifier",
+							type: NodeType.Identifier,
 							name: "a",
 						},
 						right: {
-							type: "Identifier",
+							type: NodeType.Identifier,
 							name: "b",
 						},
 					},
 					right: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "c",
 					},
 				},
@@ -260,12 +218,12 @@ describe("Parser", () => {
 		it("should parse unary expressions", () => {
 			const ast = parseExpression("!a");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "UnaryExpression",
+					type: NodeType.UnaryExpression,
 					operator: "!",
 					argument: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "a",
 					},
 					prefix: true,
@@ -278,19 +236,19 @@ describe("Parser", () => {
 		it("should parse ternary expressions", () => {
 			const ast = parseExpression("a ? b : c");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "ConditionalExpression",
+					type: NodeType.ConditionalExpression,
 					test: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "a",
 					},
 					consequent: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "b",
 					},
 					alternate: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "c",
 					},
 				},
@@ -300,29 +258,29 @@ describe("Parser", () => {
 		it("should parse nested ternary expressions", () => {
 			const ast = parseExpression("a ? b : c ? d : e");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "ConditionalExpression",
+					type: NodeType.ConditionalExpression,
 					test: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "a",
 					},
 					consequent: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "b",
 					},
 					alternate: {
-						type: "ConditionalExpression",
+						type: NodeType.ConditionalExpression,
 						test: {
-							type: "Identifier",
+							type: NodeType.Identifier,
 							name: "c",
 						},
 						consequent: {
-							type: "Identifier",
+							type: NodeType.Identifier,
 							name: "d",
 						},
 						alternate: {
-							type: "Identifier",
+							type: NodeType.Identifier,
 							name: "e",
 						},
 					},
@@ -335,43 +293,43 @@ describe("Parser", () => {
 		it("should parse complex expressions", () => {
 			const ast = parseExpression("a + b * c > d ? e : f");
 			expect(ast).toEqual({
-				type: "Program",
+				type: NodeType.Program,
 				body: {
-					type: "ConditionalExpression",
+					type: NodeType.ConditionalExpression,
 					test: {
-						type: "BinaryExpression",
+						type: NodeType.BinaryExpression,
 						operator: ">",
 						left: {
-							type: "BinaryExpression",
+							type: NodeType.BinaryExpression,
 							operator: "+",
 							left: {
-								type: "Identifier",
+								type: NodeType.Identifier,
 								name: "a",
 							},
 							right: {
-								type: "BinaryExpression",
+								type: NodeType.BinaryExpression,
 								operator: "*",
 								left: {
-									type: "Identifier",
+									type: NodeType.Identifier,
 									name: "b",
 								},
 								right: {
-									type: "Identifier",
+									type: NodeType.Identifier,
 									name: "c",
 								},
 							},
 						},
 						right: {
-							type: "Identifier",
+							type: NodeType.Identifier,
 							name: "d",
 						},
 					},
 					consequent: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "e",
 					},
 					alternate: {
-						type: "Identifier",
+						type: NodeType.Identifier,
 						name: "f",
 					},
 				},

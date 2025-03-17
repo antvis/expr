@@ -23,6 +23,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^3.0.8
         version: 3.0.8(vitest@3.0.8(terser@5.38.2)(tsx@4.19.2))
+      expr-eval:
+        specifier: ^2.0.2
+        version: 2.0.2
       rollup:
         specifier: ^4.34.6
         version: 4.34.6
@@ -727,6 +730,9 @@ packages:
   expect-type@1.1.0:
     resolution: {integrity: sha512-bFi65yM+xZgk+u/KRIpekdSYkTB5W1pEf0Lt8Q8Msh7b+eQ7LXVtIB1Bkm4fvclDEL1b2CZkMhv2mOeF8tMdkA==}
     engines: {node: '>=12.0.0'}
+
+  expr-eval@2.0.2:
+    resolution: {integrity: sha512-4EMSHGOPSwAfBiibw3ndnP0AvjDWLsMvGOvWEZ2F96IGk0bIVdjQisOHxReSkE13mHcfbuCiXw+G4y0zv6N8Eg==}
 
   foreground-child@3.3.1:
     resolution: {integrity: sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw==}
@@ -1593,6 +1599,8 @@ snapshots:
       '@types/estree': 1.0.6
 
   expect-type@1.1.0: {}
+
+  expr-eval@2.0.2: {}
 
   foreground-child@3.3.1:
     dependencies:
