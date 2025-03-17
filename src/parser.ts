@@ -1,4 +1,4 @@
-import type { Token } from "./tokenizer";
+import { type Token, TokenType } from "./tokenizer";
 import { ExpressionError } from "./utils";
 
 /**
@@ -12,15 +12,16 @@ import { ExpressionError } from "./utils";
  * - UnaryExpression: Operations with one operand
  * - ConditionalExpression: Ternary operator expressions
  */
-export type NodeType =
-	| "Program"
-	| "Literal"
-	| "Identifier"
-	| "MemberExpression"
-	| "CallExpression"
-	| "BinaryExpression"
-	| "UnaryExpression"
-	| "ConditionalExpression";
+export enum NodeType {
+	Program = 0,
+	Literal = 1,
+	Identifier = 2,
+	MemberExpression = 3,
+	CallExpression = 4,
+	BinaryExpression = 5,
+	UnaryExpression = 6,
+	ConditionalExpression = 7,
+}
 
 /**
  * Base interface for all AST nodes
@@ -35,7 +36,7 @@ export interface Node {
  * Contains a single expression as its body
  */
 export interface Program extends Node {
-	type: "Program";
+	type: NodeType.Program;
 	body: Expression;
 }
 
@@ -57,9 +58,8 @@ export type Expression =
  * Examples: 42, "hello", true, null
  */
 export interface Literal extends Node {
-	type: "Literal";
+	type: NodeType.Literal;
 	value: string | number | boolean | null; // The actual value
-	raw: string; // Original string representation in the source
 }
 
 /**
@@ -67,7 +67,7 @@ export interface Literal extends Node {
  * Examples: variable names, property names
  */
 export interface Identifier extends Node {
-	type: "Identifier";
+	type: NodeType.Identifier;
 	name: string;
 }
 
@@ -78,7 +78,7 @@ export interface Identifier extends Node {
  * - obj["prop"] (computed: true)
  */
 export interface MemberExpression extends Node {
-	type: "MemberExpression";
+	type: NodeType.MemberExpression;
 	object: Expression; // The object being accessed
 	property: Expression; // The property being accessed
 	computed: boolean; // true for obj["prop"], false for obj.prop
@@ -89,7 +89,7 @@ export interface MemberExpression extends Node {
  * Example: @sum(a, b)
  */
 export interface CallExpression extends Node {
-	type: "CallExpression";
+	type: NodeType.CallExpression;
 	callee: Identifier; // Function name
 	arguments: Expression[]; // Array of argument expressions
 }
@@ -99,7 +99,7 @@ export interface CallExpression extends Node {
  * Examples: a + b, x * y, foo === bar
  */
 export interface BinaryExpression extends Node {
-	type: "BinaryExpression";
+	type: NodeType.BinaryExpression;
 	operator: string; // The operator (+, -, *, /, etc.)
 	left: Expression; // Left-hand operand
 	right: Expression; // Right-hand operand
@@ -110,7 +110,7 @@ export interface BinaryExpression extends Node {
  * Example: !valid
  */
 export interface UnaryExpression extends Node {
-	type: "UnaryExpression";
+	type: NodeType.UnaryExpression;
 	operator: string; // The operator (!, -, etc.)
 	argument: Expression; // The operand
 	prefix: boolean; // true for prefix operators, false for postfix
@@ -121,11 +121,45 @@ export interface UnaryExpression extends Node {
  * Example: condition ? trueValue : falseValue
  */
 export interface ConditionalExpression extends Node {
-	type: "ConditionalExpression";
+	type: NodeType.ConditionalExpression;
 	test: Expression; // The condition
 	consequent: Expression; // Value if condition is true
 	alternate: Expression; // Value if condition is false
 }
+
+// Operator precedence lookup table for O(1) access
+const OPERATOR_PRECEDENCE = new Map<string, number>([
+	["||", 2],
+	["&&", 3],
+	["===", 4],
+	["!==", 4],
+	[">", 5],
+	[">=", 5],
+	["<", 5],
+	["<=", 5],
+	["+", 6],
+	["-", 6],
+	["*", 7],
+	["/", 7],
+	["%", 7],
+	["!", 8],
+]);
+
+// Pre-create common AST nodes for reuse
+const NULL_LITERAL: Literal = {
+	type: NodeType.Literal,
+	value: null,
+};
+
+const TRUE_LITERAL: Literal = {
+	type: NodeType.Literal,
+	value: true,
+};
+
+const FALSE_LITERAL: Literal = {
+	type: NodeType.Literal,
+	value: false,
+};
 
 /**
  * Parse tokens into an AST
@@ -137,13 +171,14 @@ export interface ConditionalExpression extends Node {
 export const parse = (tokens: Token[]): Program => {
 	// Use closure to encapsulate the parser state
 	let current = 0;
+	const length = tokens.length;
 
 	/**
 	 * Returns the current token without consuming it
 	 * @returns The current token or null if at end of input
 	 */
 	const peek = (): Token | null => {
-		if (current >= tokens.length) return null;
+		if (current >= length) return null;
 		return tokens[current];
 	};
 
@@ -152,9 +187,7 @@ export const parse = (tokens: Token[]): Program => {
 	 * @returns The consumed token
 	 */
 	const consume = (): Token => {
-		const token = tokens[current];
-		current++;
-		return token;
+		return tokens[current++];
 	};
 
 	/**
@@ -162,7 +195,7 @@ export const parse = (tokens: Token[]): Program => {
 	 * @param type - The token type to match
 	 * @returns boolean indicating if current token matches
 	 */
-	const match = (type: Token["type"]): boolean => {
+	const match = (type: TokenType): boolean => {
 		const token = peek();
 		return token !== null && token.type === type;
 	};
@@ -173,37 +206,15 @@ export const parse = (tokens: Token[]): Program => {
 	 * @returns Precedence level (-1 to 9) or -1 if not an operator
 	 */
 	const getOperatorPrecedence = (token: Token): number => {
-		if (token.type === "OPERATOR") {
-			switch (token.value) {
-				case "||":
-					return 2;
-				case "&&":
-					return 3;
-				case "===":
-				case "!==":
-					return 4;
-				case ">":
-				case ">=":
-				case "<":
-				case "<=":
-					return 5;
-				case "+":
-				case "-":
-					return 6;
-				case "*":
-				case "/":
-				case "%":
-					return 7;
-				case "!":
-					return 8;
-			}
+		if (token.type === TokenType.OPERATOR) {
+			return OPERATOR_PRECEDENCE.get(token.value) || -1;
 		}
 
-		if (token.type === "DOT" || token.type === "BRACKET_LEFT") {
+		if (token.type === TokenType.DOT || token.type === TokenType.BRACKET_LEFT) {
 			return 9; // Highest precedence for member access
 		}
 
-		if (token.type === "QUESTION") {
+		if (token.type === TokenType.QUESTION) {
 			return 1; // Make it higher than -1 but lower than other operators
 		}
 
@@ -220,8 +231,8 @@ export const parse = (tokens: Token[]): Program => {
 		let property: Expression;
 		let computed: boolean;
 
-		if (token.type === "DOT") {
-			if (!match("IDENTIFIER")) {
+		if (token.type === TokenType.DOT) {
+			if (!match(TokenType.IDENTIFIER)) {
 				const token = peek();
 				throw new ExpressionError(
 					"Expected property name",
@@ -231,7 +242,7 @@ export const parse = (tokens: Token[]): Program => {
 			}
 			const identifierToken = consume();
 			property = {
-				type: "Identifier",
+				type: NodeType.Identifier,
 				name: identifierToken.value,
 			};
 			computed = false;
@@ -239,7 +250,7 @@ export const parse = (tokens: Token[]): Program => {
 			// BRACKET_LEFT
 			property = parseExpression(0);
 
-			if (!match("BRACKET_RIGHT")) {
+			if (!match(TokenType.BRACKET_RIGHT)) {
 				const token = peek();
 				throw new ExpressionError(
 					"Expected closing bracket",
@@ -252,7 +263,7 @@ export const parse = (tokens: Token[]): Program => {
 		}
 
 		return {
-			type: "MemberExpression",
+			type: NodeType.MemberExpression,
 			object,
 			property,
 			computed,
@@ -267,7 +278,7 @@ export const parse = (tokens: Token[]): Program => {
 		const token = consume(); // consume FUNCTION token
 		const args: Expression[] = [];
 
-		if (!match("PAREN_LEFT")) {
+		if (!match(TokenType.PAREN_LEFT)) {
 			const token = peek();
 			throw new ExpressionError(
 				"Expected opening parenthesis after function name",
@@ -280,7 +291,7 @@ export const parse = (tokens: Token[]): Program => {
 		// Parse arguments
 		while (true) {
 			// First check for right parenthesis
-			if (match("PAREN_RIGHT")) {
+			if (match(TokenType.PAREN_RIGHT)) {
 				consume(); // consume )
 				break;
 			}
@@ -297,7 +308,7 @@ export const parse = (tokens: Token[]): Program => {
 
 			// If we have arguments already, we need a comma
 			if (args.length > 0) {
-				if (!match("COMMA")) {
+				if (!match(TokenType.COMMA)) {
 					const token = peek();
 					throw new ExpressionError(
 						"Expected comma between function arguments",
@@ -313,9 +324,9 @@ export const parse = (tokens: Token[]): Program => {
 		}
 
 		return {
-			type: "CallExpression",
+			type: NodeType.CallExpression,
 			callee: {
-				type: "Identifier",
+				type: NodeType.Identifier,
 				name: token.value,
 			},
 			arguments: args,
@@ -337,13 +348,13 @@ export const parse = (tokens: Token[]): Program => {
 
 		// Handle unary operators
 		if (
-			token.type === "OPERATOR" &&
+			token.type === TokenType.OPERATOR &&
 			(token.value === "!" || token.value === "-")
 		) {
 			consume(); // consume operator
 			const argument = parsePrimary();
 			return {
-				type: "UnaryExpression",
+				type: NodeType.UnaryExpression,
 				operator: token.value,
 				argument,
 				prefix: true,
@@ -351,57 +362,47 @@ export const parse = (tokens: Token[]): Program => {
 		}
 
 		switch (token.type) {
-			case "NUMBER": {
+			case TokenType.NUMBER: {
 				consume(); // consume number
 				return {
-					type: "Literal",
+					type: NodeType.Literal,
 					value: Number(token.value),
-					raw: token.value,
 				};
 			}
 
-			case "STRING": {
+			case TokenType.STRING: {
 				consume(); // consume string
 				return {
-					type: "Literal",
+					type: NodeType.Literal,
 					value: token.value,
-					raw: `"${token.value}"`,
 				};
 			}
 
-			case "BOOLEAN": {
+			case TokenType.BOOLEAN: {
 				consume(); // consume boolean
-				return {
-					type: "Literal",
-					value: token.value === "true",
-					raw: token.value,
-				};
+				return token.value === "true" ? TRUE_LITERAL : FALSE_LITERAL;
 			}
 
-			case "NULL": {
+			case TokenType.NULL: {
 				consume(); // consume null
-				return {
-					type: "Literal",
-					value: null,
-					raw: "null",
-				};
+				return NULL_LITERAL;
 			}
 
-			case "IDENTIFIER": {
+			case TokenType.IDENTIFIER: {
 				consume(); // consume identifier
 				return {
-					type: "Identifier",
+					type: NodeType.Identifier,
 					name: token.value,
 				};
 			}
 
-			case "FUNCTION":
+			case TokenType.FUNCTION:
 				return parseCallExpression();
 
-			case "PAREN_LEFT": {
+			case TokenType.PAREN_LEFT: {
 				consume(); // consume (
 				const expr = parseExpression(0);
-				if (!match("PAREN_RIGHT")) {
+				if (!match(TokenType.PAREN_RIGHT)) {
 					const token = peek();
 					throw new ExpressionError(
 						"Expected closing parenthesis",
@@ -430,19 +431,16 @@ export const parse = (tokens: Token[]): Program => {
 	const parseExpression = (precedence = 0): Expression => {
 		let left = parsePrimary();
 
-		while (true) {
-			const token = peek();
-
-			if (!token) break;
-
+		while (current < length) {
+			const token = tokens[current]; // Inline peek() for performance
 			const nextPrecedence = getOperatorPrecedence(token);
 
 			if (nextPrecedence <= precedence) break;
 
-			if (token.type === "QUESTION") {
+			if (token.type === TokenType.QUESTION) {
 				consume(); // consume ?
 				const consequent = parseExpression(0);
-				if (!match("COLON")) {
+				if (!match(TokenType.COLON)) {
 					const token = peek();
 					throw new ExpressionError(
 						"Expected : in conditional expression",
@@ -453,7 +451,7 @@ export const parse = (tokens: Token[]): Program => {
 				consume(); // consume :
 				const alternate = parseExpression(0);
 				left = {
-					type: "ConditionalExpression",
+					type: NodeType.ConditionalExpression,
 					test: left,
 					consequent,
 					alternate,
@@ -461,11 +459,11 @@ export const parse = (tokens: Token[]): Program => {
 				continue;
 			}
 
-			if (token.type === "OPERATOR") {
+			if (token.type === TokenType.OPERATOR) {
 				consume(); // consume operator
 				const right = parseExpression(nextPrecedence);
 				left = {
-					type: "BinaryExpression",
+					type: NodeType.BinaryExpression,
 					operator: token.value,
 					left,
 					right,
@@ -473,7 +471,10 @@ export const parse = (tokens: Token[]): Program => {
 				continue;
 			}
 
-			if (token.type === "DOT" || token.type === "BRACKET_LEFT") {
+			if (
+				token.type === TokenType.DOT ||
+				token.type === TokenType.BRACKET_LEFT
+			) {
 				left = parseMemberExpression(left);
 				continue;
 			}
@@ -487,7 +488,7 @@ export const parse = (tokens: Token[]): Program => {
 	// Start parsing from the initial state
 	const expression = parseExpression();
 	return {
-		type: "Program",
+		type: NodeType.Program,
 		body: expression,
 	};
 };

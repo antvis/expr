@@ -1,5 +1,5 @@
 import { bench, describe } from "vitest";
-import { compile, evaluate, register } from "../src";
+import { compile, evaluate, register } from "../dist/index.esm.js";
 
 const context = {
 	user: {
@@ -27,7 +27,6 @@ const context = {
 	},
 };
 
-// 测试表达式
 const simpleExpression = "user.age + 5";
 const mediumExpression = 'user.scores[2] > 80 ? "Good" : "Needs improvement"';
 const complexExpression =
@@ -38,12 +37,11 @@ const complexExpression2 =
 
 const simpleExpressionCompiler = compile(simpleExpression);
 const mediumExpressionCompiler = compile(mediumExpression);
-const complexExpression2Compiler = compile(complexExpression);
+const complexExpressionCompiler = compile(complexExpression);
 
 register("calculateTotal", context.calculateTotal);
 register("applyDiscount", context.applyDiscount);
 
-// 创建 Function 对象
 const newFunctionSimple = new Function(
 	"context",
 	`with(context) { return ${simpleExpression}; }`,
@@ -58,7 +56,7 @@ const newFunctionComplex = new Function(
 );
 
 describe("Simple Expression Benchmarks", () => {
-	bench("evaluate after compile (baseline)", () => {
+	bench("evaluate after compile (baseline) only interpreter", () => {
 		simpleExpressionCompiler(context);
 	});
 
@@ -66,13 +64,16 @@ describe("Simple Expression Benchmarks", () => {
 		newFunctionSimple(context);
 	});
 
-	bench("evaluate without compile (vs evaluate)", () => {
-		evaluate(simpleExpression, context);
-	});
+	bench(
+		"evaluate without compile (vs evaluate) tokenize + parse + interpreter",
+		() => {
+			evaluate(simpleExpression, context);
+		},
+	);
 });
 
 describe("Medium Expression Benchmarks", () => {
-	bench("evaluate after compile (baseline)", () => {
+	bench("evaluate after compile (baseline) only interpreter", () => {
 		mediumExpressionCompiler(context);
 	});
 
@@ -80,21 +81,27 @@ describe("Medium Expression Benchmarks", () => {
 		newFunctionMedium(context);
 	});
 
-	bench("evaluate without compile (vs evaluate)", () => {
-		evaluate(mediumExpression, context);
-	});
+	bench(
+		"evaluate without compile (vs evaluate) tokenize + parse + interpreter",
+		() => {
+			evaluate(mediumExpression, context);
+		},
+	);
 });
 
 describe("Complex Expression Benchmarks", () => {
-	bench("evaluate after compile (baseline)", () => {
-		complexExpression2Compiler(context);
+	bench("evaluate after compile (baseline) only interpreter", () => {
+		complexExpressionCompiler(context);
 	});
 
 	bench("new Function (vs evaluate)", () => {
 		newFunctionComplex(context);
 	});
 
-	bench("evaluate without compile (vs evaluate)", () => {
-		evaluate(complexExpression2, context);
-	});
+	bench(
+		"evaluate without compile (vs evaluate) tokenize + parse + interpreter",
+		() => {
+			evaluate(complexExpression2, context);
+		},
+	);
 });

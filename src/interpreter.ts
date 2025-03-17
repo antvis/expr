@@ -1,13 +1,14 @@
-import type {
-	BinaryExpression,
-	CallExpression,
-	ConditionalExpression,
-	Expression,
-	Identifier,
-	Literal,
-	MemberExpression,
-	Program,
-	UnaryExpression,
+import {
+	type BinaryExpression,
+	type CallExpression,
+	type ConditionalExpression,
+	type Expression,
+	type Identifier,
+	type Literal,
+	type MemberExpression,
+	NodeType,
+	type Program,
+	type UnaryExpression,
 } from "./parser";
 import { ExpressionError } from "./utils";
 
@@ -225,19 +226,19 @@ export const evaluateAst = (
 	const evaluateNode = (node: Expression): unknown => {
 		try {
 			switch (node.type) {
-				case "Literal":
+				case NodeType.Literal:
 					return evaluateLiteral(node);
-				case "Identifier":
+				case NodeType.Identifier:
 					return evaluateIdentifier(node);
-				case "MemberExpression":
+				case NodeType.MemberExpression:
 					return evaluateMemberExpression(node);
-				case "CallExpression":
+				case NodeType.CallExpression:
 					return evaluateCallExpression(node);
-				case "BinaryExpression":
+				case NodeType.BinaryExpression:
 					return evaluateBinaryExpression(node);
-				case "UnaryExpression":
+				case NodeType.UnaryExpression:
 					return evaluateUnaryExpression(node);
-				case "ConditionalExpression":
+				case NodeType.ConditionalExpression:
 					return evaluateConditionalExpression(node);
 				default:
 					throw new ExpressionError(
