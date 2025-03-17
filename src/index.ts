@@ -7,13 +7,13 @@ import { parse } from "./parser";
 import { tokenize } from "./tokenizer";
 import { promisify } from "./utils";
 
-export interface ExpressionConfig {
+interface ExpressionConfig {
 	maxTimeout: number;
 	blackList: Set<string>;
 }
 
 // Default global configuration
-export const defaultConfig: ExpressionConfig = {
+const defaultConfig: ExpressionConfig = {
 	maxTimeout: 10000,
 	// Global blacklist for keywords that cannot be used in expressions
 	blackList: new Set([
@@ -36,7 +36,7 @@ const activeConfig: ExpressionConfig = {
  * Set global configuration options for all expression evaluations
  * @param config - Configuration options to set
  */
-export function configure(config: Partial<ExpressionConfig>): void {
+function configure(config: Partial<ExpressionConfig>): void {
 	if (config.maxTimeout !== undefined) {
 		activeConfig.maxTimeout = config.maxTimeout;
 	}
@@ -50,7 +50,7 @@ export function configure(config: Partial<ExpressionConfig>): void {
  * Get the current active configuration
  * @returns The current configuration
  */
-export function getConfig(): ExpressionConfig {
+function getConfig(): ExpressionConfig {
 	return {
 		...activeConfig,
 		blackList: new Set(activeConfig.blackList),
@@ -62,7 +62,7 @@ export function getConfig(): ExpressionConfig {
 type ExpressionFunction = (...args: any[]) => any;
 const exprGlobalFunctions: Record<string, ExpressionFunction> = {};
 
-export class ExpressionError extends Error {
+class ExpressionError extends Error {
 	constructor(
 		message: string,
 		public readonly position?: number,
@@ -78,7 +78,7 @@ export class ExpressionError extends Error {
  * @param name - The name of the function to register
  * @param fn - The function implementation
  */
-export function register(name: string, fn: ExpressionFunction): void {
+function register(name: string, fn: ExpressionFunction): void {
 	exprGlobalFunctions[name] = fn;
 }
 
@@ -158,7 +158,7 @@ async function executeWithTimeout<T>(fn: () => T): Promise<T> {
  * @param expression - The expression to compile
  * @returns A function that evaluates the expression with a given context
  */
-export function compileSync(
+function compileSync(
 	expression: string,
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 ): (context?: Context) => Promise<any> {
@@ -194,7 +194,7 @@ export function compileSync(
  * @param expression - The expression to compile
  * @returns A Promise that resolves to a function that evaluates the expression with a given context
  */
-export const compileAsync = promisify(compileSync);
+const compileAsync = promisify(compileSync);
 
 /**
  * Evaluate an expression with a given context
@@ -202,7 +202,7 @@ export const compileAsync = promisify(compileSync);
  * @param context - The context to use for evaluation
  * @returns The result of evaluating the expression
  */
-export async function evaluate(
+async function evaluate(
 	expression: string,
 	context: Context = {},
 	// biome-ignore lint/suspicious/noExplicitAny: Return type depends on the expression
@@ -212,3 +212,13 @@ export async function evaluate(
 	const evaluator = compileSync(expression);
 	return evaluator(context);
 }
+
+export {
+	compileAsync as compile,
+	compileSync,
+	evaluate,
+	getConfig,
+	register,
+	configure,
+	ExpressionError,
+};
