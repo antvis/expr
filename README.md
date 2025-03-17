@@ -7,7 +7,6 @@ Now we have solved this problem for you. We have designed a simple and easy-to-u
 ## Features
 
 - 🔒 **Secure by default** - No access to global objects or prototype chain, does not use `eval` or `new Function`
-- ⚡ **Async support** - All evaluation operations return Promises, supporting asynchronous computation and timeout protection
 - 🚀 **High performance** - Supports pre-compilation of expressions for improved performance with repeated evaluations
 - 🛠️ **Extensible** - Register custom functions to easily extend functionality
 - 🪩 **Lightweight** - Zero dependencies, small footprint
@@ -24,13 +23,13 @@ pnpm add @antv/expr
 
 ## Basic Usage
 
-### Asynchronous Expression Evaluation
+### Synchronous Expression Evaluation
 
 ```typescript
 import { evaluate } from '@antv/expr';
 
 // Basic evaluation
-const result = await evaluate('x + y', { x: 10, y: 20 }); // returns 30
+const result = evaluate('x + y', { x: 10, y: 20 }); // returns 30
 
 // Using dot notation and array access
 const data = {
@@ -38,22 +37,40 @@ const data = {
   status: 'active'
 };
 
-const result = await evaluate('data.values[0] + data.values[1]', { data }); // returns 3
+const result = evaluate('data.values[0] + data.values[1]', { data }); // returns 3
 ```
 
 ### Pre-compiling Expressions
 
 ```typescript
-import { compileSync, compile } from '@antv/expr';
+import { compile } from '@antv/expr';
 
-// Synchronous compilation (returns async execution function)
-const evaluator = compileSync('price * quantity');
-const result1 = await evaluator({ price: 10, quantity: 5 }); // returns 50
-const result2 = await evaluator({ price: 20, quantity: 3 }); // returns 60
+// Compile an expression
+const evaluator = compile('price * quantity');
+const result1 = evaluator({ price: 10, quantity: 5 }); // returns 50
+const result2 = evaluator({ price: 20, quantity: 3 }); // returns 60
+```
 
-// Asynchronous compilation
-const asyncEvaluator = await compile('price * quantity');
-const result = await asyncEvaluator({ price: 15, quantity: 2 }); // returns 30
+### Using Asynchronous Patterns (Optional)
+
+While the library is synchronous, you can still use asynchronous patterns if needed:
+
+```typescript
+import { evaluate } from '@antv/expr';
+
+// Wrap evaluation in an async function
+async function asyncEvaluate(expr, context) {
+  return new Promise((resolve, reject) => {
+    try {
+      resolve(evaluate(expr, context));
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+// Use with async/await
+const result = await asyncEvaluate('x + y', { x: 10, y: 20 }); // returns 30
 ```
 
 ### Registering Custom Functions
@@ -66,8 +83,8 @@ register('sum', (...args) => args.reduce((a, b) => a + b, 0));
 register('average', (array) => array.reduce((a, b) => a + b, 0) / array.length);
 
 // Use custom functions in expressions
-const result = await evaluate('@sum(1, 2, 3, 4)'); // returns 10
-const avg = await evaluate('@average(data.values)', { 
+const result = evaluate('@sum(1, 2, 3, 4)'); // returns 10
+const avg = evaluate('@average(data.values)', { 
   data: { values: [10, 20, 30, 40] } 
 }); // returns 25
 ```
@@ -78,18 +95,18 @@ const avg = await evaluate('@average(data.values)', {
 
 ```typescript
 // Simple variable reference
-const result = await evaluate('x', { x: 42 }); // returns 42
+const result = evaluate('x', { x: 42 }); // returns 42
 
 // Nested property access with dot notation
-const result = await evaluate('user.profile.name', { 
+const result = evaluate('user.profile.name', { 
   user: { profile: { name: 'John' } } 
 }); // returns 'John'
 
 // Array access with bracket notation
-const result = await evaluate('items[0]', { items: [10, 20, 30] }); // returns 10
+const result = evaluate('items[0]', { items: [10, 20, 30] }); // returns 10
 
 // Mixed dot and bracket notation
-const result = await evaluate('data.items[0].value', { 
+const result = evaluate('data.items[0].value', { 
   data: { items: [{ value: 42 }] } 
 }); // returns 42
 ```
@@ -98,28 +115,28 @@ const result = await evaluate('data.items[0].value', {
 
 ```typescript
 // Basic arithmetic
-const result = await evaluate('a + b * c', { a: 5, b: 3, c: 2 }); // returns 11
+const result = evaluate('a + b * c', { a: 5, b: 3, c: 2 }); // returns 11
 
 // Using parentheses for grouping
-const result = await evaluate('(a + b) * c', { a: 5, b: 3, c: 2 }); // returns 16
+const result = evaluate('(a + b) * c', { a: 5, b: 3, c: 2 }); // returns 16
 
 // Modulo operation
-const result = await evaluate('a % b', { a: 10, b: 3 }); // returns 1
+const result = evaluate('a % b', { a: 10, b: 3 }); // returns 1
 ```
 
 ### Comparison and Logical Operations
 
 ```typescript
 // Comparison operators
-const result = await evaluate('age >= 18', { age: 20 }); // returns true
+const result = evaluate('age >= 18', { age: 20 }); // returns true
 
 // Logical AND
-const result = await evaluate('isActive && !isDeleted', { 
+const result = evaluate('isActive && !isDeleted', { 
   isActive: true, isDeleted: false 
 }); // returns true
 
 // Logical OR
-const result = await evaluate('status === "active" || status === "pending"', { 
+const result = evaluate('status === "active" || status === "pending"', { 
   status: 'pending' 
 }); // returns true
 ```
@@ -128,12 +145,12 @@ const result = await evaluate('status === "active" || status === "pending"', {
 
 ```typescript
 // Simple ternary expression
-const result = await evaluate('age >= 18 ? "adult" : "minor"', { 
+const result = evaluate('age >= 18 ? "adult" : "minor"', { 
   age: 20 
 }); // returns 'adult'
 
 // Nested ternary expressions
-const result = await evaluate('score >= 90 ? "A" : score >= 80 ? "B" : "C"', { 
+const result = evaluate('score >= 90 ? "A" : score >= 80 ? "B" : "C"', { 
   score: 85 
 }); // returns 'B'
 ```
@@ -148,10 +165,10 @@ register('max', Math.max);
 register('formatCurrency', (amount) => `$${amount.toFixed(2)}`);
 
 // Function call with arguments
-const result = await evaluate('@max(a, b, c)', { a: 5, b: 9, c: 2 }); // returns 9
+const result = evaluate('@max(a, b, c)', { a: 5, b: 9, c: 2 }); // returns 9
 
 // Expression as function arguments
-const result = await evaluate('@formatCurrency(price * quantity)', { 
+const result = evaluate('@formatCurrency(price * quantity)', { 
   price: 10.5, quantity: 3 
 }); // returns '$31.50'
 ```
@@ -161,50 +178,32 @@ const result = await evaluate('@formatCurrency(price * quantity)', {
 
 ### Timeout Handling
 
+You can implement timeout handling by wrapping your evaluation in a Promise.race with a timeout:
+
 ```typescript
-import { configure, evaluate } from '@antv/expr';
+import { evaluate } from "@antv/expr";
 
-// Register a setTimeout function
-register(
-	"settimeout",
-	(timeout: number) => new Promise((resolve) => setTimeout(resolve, timeout)),
-);
+// Create a function that evaluates with a timeout
+function evaluateWithTimeout(expr, context, timeoutMs) {
+	const evaluationPromise = new Promise((resolve, reject) => {
+		try {
+			const result = evaluate(expr, context);
+			resolve(result);
+		} catch (error) {
+			reject(error);
+		}
+	});
 
-// Set maximum execution time to 500 milliseconds
-configure({ maxTimeout: 500 });
+	const timeoutPromise = new Promise((_, reject) => {
+		setTimeout(
+			() => reject(new Error(`Evaluation timed out after ${timeoutMs}ms`)),
+			timeoutMs,
+		);
+	});
 
-// Try to execute a potentially long-running expression
-try {
-	await evaluate("@settimeout(1000)");
-} catch (error) {
-	console.error("Expression error:", error.message); // Will catch timeout error: Expression error: Evaluation timed out after 500ms
+	return Promise.race([evaluationPromise, timeoutPromise]);
 }
 ```
-
-### Security Configuration
-
-```typescript
-import { configure } from '@antv/expr';
-
-// Custom blacklisted keywords
-configure({
-  blackList: new Set([
-    'constructor',
-    '__proto__',
-    'prototype',
-    'eval',
-    'Function',
-    'this',
-    'window',
-    'global',
-    // Add custom blacklisted keywords
-    'dangerous'
-  ])
-});
-```
-**Default BlackList:** `['constructor', '__proto__', 'prototype', 'eval', 'Function', 'this', 'window', 'global']`
-**Note:** You will replace the default blacklist with your custom blacklist.
-
 ## Security Features
 
 This library is designed with security in mind:
@@ -219,37 +218,22 @@ This library is designed with security in mind:
 
 ### Core Functions
 
-#### `evaluate(expression: string, context?: object): Promise<any>`
+#### `evaluate(expression: string, context?: object): any`
 
-Asynchronously evaluates an expression and returns the result.
+Synchronously evaluates an expression and returns the result.
 
 - `expression`: The expression string to evaluate
 - `context`: An object containing variables used in the expression (optional)
-- Returns: A Promise that resolves to the result of the expression evaluation
+- Returns: The result of the expression evaluation
 
-#### `compileSync(expression: string): (context?: object) => Promise<any>`
+#### `compile(expression: string): (context?: object) => any`
 
-Synchronously compiles an expression, returning an async execution function that can be used multiple times.
-
-- `expression`: The expression string to compile
-- Returns: A function that accepts a context object and returns a Promise resolving to the evaluation result
-
-#### `compile(expression: string): Promise<(context?: object) => Promise<any>>`
-
-Asynchronously compiles an expression, returning an async evaluation function that can be used multiple times.
+Synchronously compiles an expression, returning a function that can be used multiple times.
 
 - `expression`: The expression string to compile
-- Returns: A Promise that resolves to a function that accepts a context object and returns a Promise resolving to the evaluation result
+- Returns: A function that accepts a context object and returns the evaluation result
 
-### Configuration and Registration
-
-#### `configure(config: Partial<ExpressionConfig>): void`
-
-Sets global configuration for expression evaluation.
-
-- `config`: Configuration options object
-  - `maxTimeout`: Maximum execution time in milliseconds
-  - `blackList`: Set of keywords not allowed in expressions
+### Registration
 
 #### `register(name: string, fn: Function): void`
 
@@ -257,7 +241,6 @@ Registers a custom function that can be used in expressions.
 
 - `name`: Function name (used with @ prefix in expressions)
 - `fn`: Function implementation
-
 
 ### Error Handling
 
