@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compileSync, evaluate, register } from "../src";
+import { evaluate, register } from "../src";
 
 describe("Dynamic Template Capabilities", () => {
 	// Helper function to evaluate expressions with custom functions
