@@ -6,9 +6,11 @@ Now we have solved this problem for you. We have designed a simple and easy-to-u
 
 ## Features
 
-- 🔒 **Secure by default** - no access to global objects or prototype chain, do not use `eval` or `new Function`
-- 🎯 **Perfect for SSR environments** - designed for server-side rendering
-- 📦 **Zero dependencies** & extremely lightweight & no dependencies
+- 🔒 **Secure by default** - No access to global objects or prototype chain, does not use `eval` or `new Function`
+- ⚡ **Async support** - All evaluation operations return Promises, supporting asynchronous computation and timeout protection
+- 🚀 **High performance** - Supports pre-compilation of expressions for improved performance with repeated evaluations
+- 🛠️ **Extensible** - Register custom functions to easily extend functionality
+- 🪩 **Lightweight** - Zero dependencies, small footprint
 
 ## Installation
 
@@ -22,196 +24,248 @@ pnpm add @antv/expr
 
 ## Basic Usage
 
+### Asynchronous Expression Evaluation
+
 ```typescript
-import { evaluate, createExpression } from "@antv/expr";
+import { evaluate } from '@antv/expr';
 
-// Quick evaluation
-const result = evaluate("price * quantity", {
-  price: 10,
-  quantity: 5
-}); // returns 50
-
-// Chainable API
-const result = createExpression("price * quantity")
-  .evaluate({ price: 10, quantity: 5 }); // returns 50
+// Basic evaluation
+const result = await evaluate('x + y', { x: 10, y: 20 }); // returns 30
 
 // Using dot notation and array access
 const data = {
   values: [1, 2, 3],
-  status: "active"
+  status: 'active'
 };
 
-const result = createExpression('data.values[0] + data["values"][1]')
-  .evaluate({ data }); // returns 3
-
-// Using custom functions with configuration
-const expr = createExpression('@sum(data.values) > 5 ? data["status"] : "inactive"')
-  .configure({ strictMode: false })
-  .extend({
-    sum: (arr: number[]) => arr.reduce((a, b) => a + b, 0),
-    uppercase: (str: string) => str.toUpperCase()
-  })
-  .evaluate({
-    data: {
-      values: [1, 2, 3],
-      status: "active"
-    }
-  }); // returns "inactive"
+const result = await evaluate('data.values[0] + data.values[1]', { data }); // returns 3
 ```
 
-## Supported Grammatical Forms
+### Pre-compiling Expressions
 
-The expression evaluator supports various grammatical forms to help you create dynamic expressions:
+```typescript
+import { compileSync, compile } from '@antv/expr';
 
-### 1. Variable References
+// Synchronous compilation (returns async execution function)
+const evaluator = compileSync('price * quantity');
+const result1 = await evaluator({ price: 10, quantity: 5 }); // returns 50
+const result2 = await evaluator({ price: 20, quantity: 3 }); // returns 60
+
+// Asynchronous compilation
+const asyncEvaluator = await compile('price * quantity');
+const result = await asyncEvaluator({ price: 15, quantity: 2 }); // returns 30
+```
+
+### Registering Custom Functions
+
+```typescript
+import { register, evaluate } from '@antv/expr';
+
+// Register custom functions
+register('sum', (...args) => args.reduce((a, b) => a + b, 0));
+register('average', (array) => array.reduce((a, b) => a + b, 0) / array.length);
+
+// Use custom functions in expressions
+const result = await evaluate('@sum(1, 2, 3, 4)'); // returns 10
+const avg = await evaluate('@average(data.values)', { 
+  data: { values: [10, 20, 30, 40] } 
+}); // returns 25
+```
+
+## Supported Syntax
+
+### Variable References
 
 ```typescript
 // Simple variable reference
-const result = evaluate("x", { x: 42 }); // returns 42
+const result = await evaluate('x', { x: 42 }); // returns 42
 
 // Nested property access with dot notation
-const result = evaluate("user.profile.name", { 
-  user: { profile: { name: "John" } } 
-}); // returns "John"
+const result = await evaluate('user.profile.name', { 
+  user: { profile: { name: 'John' } } 
+}); // returns 'John'
 
 // Array access with bracket notation
-const result = evaluate("items[0]", { items: [10, 20, 30] }); // returns 10
+const result = await evaluate('items[0]', { items: [10, 20, 30] }); // returns 10
 
 // Mixed dot and bracket notation
-const result = evaluate("data.items[0].value", { 
+const result = await evaluate('data.items[0].value', { 
   data: { items: [{ value: 42 }] } 
 }); // returns 42
 ```
 
-### 2. Arithmetic Operations
+### Arithmetic Operations
 
 ```typescript
 // Basic arithmetic
-const result = evaluate("a + b * c", { a: 5, b: 3, c: 2 }); // returns 11
+const result = await evaluate('a + b * c', { a: 5, b: 3, c: 2 }); // returns 11
 
-// Parentheses for grouping
-const result = evaluate("(a + b) * c", { a: 5, b: 3, c: 2 }); // returns 16
+// Using parentheses for grouping
+const result = await evaluate('(a + b) * c', { a: 5, b: 3, c: 2 }); // returns 16
 
 // Modulo operation
-const result = evaluate("a % b", { a: 10, b: 3 }); // returns 1
-
-const result = evaluate("a ^ b", { a: 2, b: 3 }); // returns 8
+const result = await evaluate('a % b', { a: 10, b: 3 }); // returns 1
 ```
 
-### 3. Comparison and Logical Operations
+### Comparison and Logical Operations
 
 ```typescript
 // Comparison operators
-const result = evaluate("age >= 18", { age: 20 }); // returns true
+const result = await evaluate('age >= 18', { age: 20 }); // returns true
 
 // Logical AND
-const result = evaluate("isActive && !isDeleted", { 
+const result = await evaluate('isActive && !isDeleted', { 
   isActive: true, isDeleted: false 
 }); // returns true
 
 // Logical OR
-const result = evaluate("status === 'active' || status === 'pending'", { 
+const result = await evaluate('status === "active" || status === "pending"', { 
   status: 'pending' 
-}); // returns true
-
-// Combined logical expressions
-const result = evaluate("(age >= 18 && status === 'active') || isAdmin", { 
-  age: 16, status: 'inactive', isAdmin: true 
 }); // returns true
 ```
 
-### 4. Conditional (Ternary) Expressions
+### Conditional (Ternary) Expressions
 
 ```typescript
 // Simple ternary expression
-const result = evaluate("age >= 18 ? 'adult' : 'minor'", { 
+const result = await evaluate('age >= 18 ? "adult" : "minor"', { 
   age: 20 
-}); // returns "adult"
+}); // returns 'adult'
 
 // Nested ternary expressions
-const result = evaluate("score >= 90 ? 'A' : score >= 80 ? 'B' : 'C'", { 
+const result = await evaluate('score >= 90 ? "A" : score >= 80 ? "B" : "C"', { 
   score: 85 
-}); // returns "B"
+}); // returns 'B'
 ```
 
-### 5. Function Calls
+### Function Calls
 
 ```typescript
-// Function call with arguments
-const result = createExpression('@max(a, b, c)')
-  .configure({ strictMode: false })
-  .extend({
-    max: (...args: number[]) => Math.max(...args)
-  })
-  .evaluate({ a: 5, b: 9, c: 2 }); // returns 9
+import { register, evaluate } from '@antv/expr';
 
-// Function call with expressions as arguments
-const result = createExpression('@formatCurrency(price * quantity)')
-  .configure({ strictMode: false })
-  .extend({
-    formatCurrency: (amount: number) => `$${amount.toFixed(2)}`
-  })
-  .evaluate({ price: 10.5, quantity: 3 }); // returns "$31.50"
+// Register functions
+register('max', Math.max);
+register('formatCurrency', (amount) => `$${amount.toFixed(2)}`);
+
+// Function call with arguments
+const result = await evaluate('@max(a, b, c)', { a: 5, b: 9, c: 2 }); // returns 9
+
+// Expression as function arguments
+const result = await evaluate('@formatCurrency(price * quantity)', { 
+  price: 10.5, quantity: 3 
+}); // returns '$31.50'
 ```
+**Default Global Functions:** `['abs', 'ceil', 'floor', 'round', 'sqrt', 'pow', 'max', 'min']`
 
 ## Advanced Usage
 
-### Pre-compilation for Better Performance
-
-
-```typescript
-// Compile once, evaluate multiple times
-const expr = createExpression('price * quantity')
-  .compile(); // Pre-compile the expression
-
-// Later use...
-const result1 = expr.evaluate({ price: 10, quantity: 5 }); // 50
-const result2 = expr.evaluate({ price: 20, quantity: 3 }); // 60
-```
-
-### Configuration Options
+### Timeout Handling
 
 ```typescript
-const expr = createExpression('someExpression')
-  .configure({
-    strictMode: true,           // Enables strict security mode (default: true)
-    maxTimeout: 1000,          // Maximum execution time in ms (default: 1000)
-  });
+import { configure, evaluate } from '@antv/expr';
+
+// Register a setTimeout function
+register(
+	"settimeout",
+	(timeout: number) => new Promise((resolve) => setTimeout(resolve, timeout)),
+);
+
+// Set maximum execution time to 500 milliseconds
+configure({ maxTimeout: 500 });
+
+// Try to execute a potentially long-running expression
+try {
+	await evaluate("@settimeout(1000)");
+} catch (error) {
+	console.error("Expression error:", error.message); // Will catch timeout error: Expression error: Evaluation timed out after 500ms
+}
 ```
 
-## Supported Operations
+### Security Configuration
 
-| Category | Operators | Example |
-|----------|-----------|--------|
-| Arithmetic | `+`, `-`, `*`, `/`, `%`, `^` (power) | `2 + 3 * 4` |
-| Comparison | `===`, `!==`, `>`, `>=`, `<`, `<=` | `age >= 18` |
-| Logical | `&&`, `||`, `!` | `isActive && !isDeleted` |
-| Conditional | `? :` | `age >= 18 ? 'adult' : 'minor'` |
-| Member Access | `.` and `[]` | `user.profile.name`, `items[0]` |
-| Function Calls | `@functionName(args)` | `@sum(1, 2, 3)` |
+```typescript
+import { configure } from '@antv/expr';
 
+// Custom blacklisted keywords
+configure({
+  blackList: new Set([
+    'constructor',
+    '__proto__',
+    'prototype',
+    'eval',
+    'Function',
+    'this',
+    'window',
+    'global',
+    // Add custom blacklisted keywords
+    'dangerous'
+  ])
+});
+```
+**Default BlackList:** `['constructor', '__proto__', 'prototype', 'eval', 'Function', 'this', 'window', 'global']`
+**Note:** You will replace the default blacklist with your custom blacklist.
 
-
-## Security
+## Security Features
 
 This library is designed with security in mind:
 
 - ✅ No access to global objects (`window`, `global`, etc.)
 - ✅ No access to prototype chain
-- ✅ No `eval` or `Function` constructor usage
-- ✅ Strict mode by default
-- ✅ Execution timeout protection
+- ✅ No use of `eval` or `Function` constructor
+- ✅ Expression execution has timeout protection
+- ✅ Configurable keyword blacklist
 
-## TypeScript Support
+## API Reference
 
-This library is written in TypeScript and provides full type definitions.
+### Core Functions
 
-```typescript
-import { Expression, ExpressionError, evaluate, createExpression } from "@antv/expr";
+#### `evaluate(expression: string, context?: object): Promise<any>`
 
-// All types are properly exported and available
-const expr: Expression = createExpression('x + y');
-```
+Asynchronously evaluates an expression and returns the result.
+
+- `expression`: The expression string to evaluate
+- `context`: An object containing variables used in the expression (optional)
+- Returns: A Promise that resolves to the result of the expression evaluation
+
+#### `compileSync(expression: string): (context?: object) => Promise<any>`
+
+Synchronously compiles an expression, returning an async execution function that can be used multiple times.
+
+- `expression`: The expression string to compile
+- Returns: A function that accepts a context object and returns a Promise resolving to the evaluation result
+
+#### `compile(expression: string): Promise<(context?: object) => Promise<any>>`
+
+Asynchronously compiles an expression, returning an async evaluation function that can be used multiple times.
+
+- `expression`: The expression string to compile
+- Returns: A Promise that resolves to a function that accepts a context object and returns a Promise resolving to the evaluation result
+
+### Configuration and Registration
+
+#### `configure(config: Partial<ExpressionConfig>): void`
+
+Sets global configuration for expression evaluation.
+
+- `config`: Configuration options object
+  - `maxTimeout`: Maximum execution time in milliseconds
+  - `blackList`: Set of keywords not allowed in expressions
+
+#### `register(name: string, fn: Function): void`
+
+Registers a custom function that can be used in expressions.
+
+- `name`: Function name (used with @ prefix in expressions)
+- `fn`: Function implementation
+
+
+### Error Handling
+
+All evaluation errors throw an `ExpressionError` type exception with detailed error information.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
 
 ## License
 
