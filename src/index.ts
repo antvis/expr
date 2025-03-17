@@ -20,6 +20,8 @@ const defaultConfig: ExpressionConfig = {
 		"constructor",
 		"__proto__",
 		"prototype",
+		"eval",
+		"Function",
 		"this",
 		"window",
 		"global",
