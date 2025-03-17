@@ -1,5 +1,5 @@
 import { bench, describe } from "vitest";
-import { Expression } from "../src";
+import { compile, evaluate, register } from "../src";
 
 const context = {
 	user: {
@@ -36,20 +36,12 @@ const complexExpression =
 const complexExpression2 =
 	'applyDiscount(calculateTotal(products), 10) > 2000 ? "High value" : "Standard"';
 
-// 预编译表达式
-const graphSecureEvalSimpleCompile = new Expression(simpleExpression)
-	.configure({ strictMode: false })
-	.compile();
-const graphSecureEvalMediumCompile = new Expression(mediumExpression)
-	.configure({ strictMode: false })
-	.compile();
-const graphSecureEvalComplexCompile = new Expression(complexExpression)
-	.configure({ strictMode: false })
-	.extend({
-		calculateTotal: context.calculateTotal,
-		applyDiscount: context.applyDiscount,
-	})
-	.compile();
+const simpleExpressionCompiler = compile(simpleExpression);
+const mediumExpressionCompiler = compile(mediumExpression);
+const complexExpression2Compiler = compile(complexExpression);
+
+register("calculateTotal", context.calculateTotal);
+register("applyDiscount", context.applyDiscount);
 
 // 创建 Function 对象
 const newFunctionSimple = new Function(
@@ -66,31 +58,43 @@ const newFunctionComplex = new Function(
 );
 
 describe("Simple Expression Benchmarks", () => {
-	bench("graph_secure_eval (baseline)", () => {
-		graphSecureEvalSimpleCompile.evaluate(context);
+	bench("evaluate after compile (baseline)", () => {
+		simpleExpressionCompiler(context);
 	});
 
-	bench("new Function (vs graph_secure_eval)", () => {
+	bench("new Function (vs evaluate)", () => {
 		newFunctionSimple(context);
+	});
+
+	bench("evaluate without compile (vs evaluate)", () => {
+		evaluate(simpleExpression, context);
 	});
 });
 
 describe("Medium Expression Benchmarks", () => {
-	bench("graph_secure_eval (baseline)", () => {
-		graphSecureEvalMediumCompile.evaluate(context);
+	bench("evaluate after compile (baseline)", () => {
+		mediumExpressionCompiler(context);
 	});
 
-	bench("new Function (vs graph_secure_eval)", () => {
+	bench("new Function (vs evaluate)", () => {
 		newFunctionMedium(context);
+	});
+
+	bench("evaluate without compile (vs evaluate)", () => {
+		evaluate(mediumExpression, context);
 	});
 });
 
 describe("Complex Expression Benchmarks", () => {
-	bench("graph_secure_eval (baseline)", () => {
-		graphSecureEvalComplexCompile.evaluate(context);
+	bench("evaluate after compile (baseline)", () => {
+		complexExpression2Compiler(context);
 	});
 
-	bench("new Function (vs graph_secure_eval)", () => {
+	bench("new Function (vs evaluate)", () => {
 		newFunctionComplex(context);
+	});
+
+	bench("evaluate without compile (vs evaluate)", () => {
+		evaluate(complexExpression2, context);
 	});
 });
