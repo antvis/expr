@@ -1,10 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-	ExpressionError,
-	compile,
-	evaluate,
-	register,
-} from "../src";
+import { ExpressionError, compileSync, evaluate, register } from "../src";
 import { createInterpreterState, evaluateAst } from "../src/interpreter";
 import { parse } from "../src/parser";
 import { tokenize } from "../src/tokenizer";
@@ -13,11 +8,13 @@ describe("Coverage Improvement Tests", () => {
 	describe("Expression Error Handling", () => {
 		it("should handle non-ExpressionError errors during evaluation", () => {
 			// Mock the evaluate function to throw a generic error
-			const originalEvaluate = vi.spyOn(console, 'error').mockImplementation(() => {
-				throw new Error("Generic error");
-			});
+			const originalEvaluate = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {
+					throw new Error("Generic error");
+				});
 
-			expect(() => evaluate("a + b", {})).toThrow();
+			expect(async () => await evaluate("a + b", {})).rejects.toThrow();
 
 			// Restore the original function
 			originalEvaluate.mockRestore();
@@ -25,22 +22,26 @@ describe("Coverage Improvement Tests", () => {
 
 		it("should handle unknown errors during evaluation", () => {
 			// Mock the evaluate function to throw a non-Error object
-			const originalEvaluate = vi.spyOn(console, 'error').mockImplementation(() => {
-				throw "Not an error object";
-			});
+			const originalEvaluate = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {
+					throw "Not an error object";
+				});
 
-			expect(() => evaluate("a + b", {})).toThrow();
+			expect(async () => await evaluate("a + b", {})).rejects.toThrow();
 
 			// Restore the original function
 			originalEvaluate.mockRestore();
 		});
 
 		it("should handle empty expressions", () => {
-			expect(() => evaluate("")).toThrow("Cannot evaluate empty expression");
+			expect(async () => await evaluate("")).rejects.toThrow(
+				"Cannot evaluate empty expression",
+			);
 		});
 
 		it("should compile expressions correctly", () => {
-			const compiled = compile("a + b");
+			const compiled = compileSync("a + b");
 			expect(compiled).toBeDefined();
 			expect(typeof compiled).toBe("function");
 		});
