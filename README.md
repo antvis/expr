@@ -186,27 +186,24 @@ Performance comparison of different evaluation methods: (baseline: new Function)
 
 ```mermaid
 gantt
-    title Simple Expressions Performance (baseline: new Function)
+    title Performance Comparison (Baseline: new Function)
     dateFormat  X
     axisFormat %s
 
-    section evaluate after compile
-    1.59 : 0, 15.9
-    section evaluate without compile
-    6.36 : 0, 63.6
-    section expr-eval Parser
-    23.94 : 0, 239.4
-    
-    title Simple Expressions Performance (baseline: new Function)
-    dateFormat  X
-    axisFormat %s
+    section Simple
+    evaluate after compile    :done, 0, 159
+    evaluate without compile  :done, 0, 636
+    expr-eval Parser          :done, 0, 2394
 
-    section evaluate after compile
-    1.59 : 0, 15.9
-    section evaluate without compile
-    6.36 : 0, 63.6
-    section expr-eval Parser
-    23.94 : 0, 239.4
+    section Medium
+    evaluate after compile    :done, 0, 216
+    evaluate without compile  :done, 0, 981
+    expr-eval Parser          :done, 0, 3781
+
+    section Complex
+    evaluate after compile    :done, 0, 159
+    evaluate without compile  :done, 0, 489
+    expr-eval Parser          :done, 0, 3274
 ```
 
 ## Advanced Usage
