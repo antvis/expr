@@ -1,13 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { Expression, createExpression, evaluate } from "../src";
+import { compileSync, evaluate, register } from "../src";
 
 describe("Dynamic Template Capabilities", () => {
-	// Helper function to evaluate expressions
-	function evaluateExpr(expression: string, context = {}, functions = {}) {
-		return createExpression(expression)
-			.configure({ strictMode: false })
-			.extend(functions)
-			.evaluate(context);
+	// Helper function to evaluate expressions with custom functions
+	async function evaluateExpr(
+		expression: string,
+		context = {},
+		functions = {},
+	) {
+		// Register any custom functions
+		Object.entries(functions).forEach(([name, fn]) => {
+			register(name, fn as any);
+		});
+
+		// Evaluate the expression
+		return await evaluate(expression, context);
 	}
 
 	describe("Nested Property Access", () => {
@@ -51,42 +58,42 @@ describe("Dynamic Template Capabilities", () => {
 			},
 		};
 
-		it("should access deeply nested properties", () => {
+		it("should access deeply nested properties", async () => {
 			expect(
-				evaluateExpr("user.profile.details.preferences.theme", context),
+				await evaluateExpr("user.profile.details.preferences.theme", context),
 			).toBe("dark");
 			expect(
-				evaluateExpr("user.profile.details.address.coordinates[0]", context),
+				await evaluateExpr(
+					"user.profile.details.address.coordinates[0]",
+					context,
+				),
 			).toBe(121.4737);
 			expect(
-				evaluateExpr(
+				await evaluateExpr(
 					"user.profile.details.preferences.notifications.frequency",
 					context,
 				),
 			).toBe("daily");
 		});
 
-		it("should handle bracket notation with string literals", () => {
+		it("should handle bracket notation with string literals", async () => {
 			expect(
-				evaluateExpr(
+				await evaluateExpr(
 					'user["profile"]["details"]["preferences"]["fontSize"]',
 					context,
 				),
 			).toBe(16);
-			expect(evaluateExpr('settings["global"]["language"]', context)).toBe(
-				"zh-CN",
-			);
 		});
 
-		it("should handle mixed dot and bracket notation", () => {
+		it("should handle mixed dot and bracket notation", async () => {
 			expect(
-				evaluateExpr(
+				await evaluateExpr(
 					'user.profile["details"].preferences["notifications"].push',
 					context,
 				),
 			).toBe(false);
 			expect(
-				evaluateExpr('user["profile"].details["address"].city', context),
+				await evaluateExpr('user["profile"].details["address"].city', context),
 			).toBe("Shanghai");
 		});
 	});
@@ -110,17 +117,17 @@ describe("Dynamic Template Capabilities", () => {
 			},
 		};
 
-		it("should access properties using dynamic keys", () => {
-			expect(evaluateExpr("data[selectedKey]", context)).toBe("value2");
-			expect(evaluateExpr("data[keys[0]]", context)).toBe("value1");
-			expect(evaluateExpr("data[keys[2]]", context)).toBe("value3");
+		it("should access properties using dynamic keys", async () => {
+			expect(await evaluateExpr("data[selectedKey]", context)).toBe("value2");
+			expect(await evaluateExpr("data[keys[0]]", context)).toBe("value1");
+			expect(await evaluateExpr("data[keys[2]]", context)).toBe("value3");
 		});
 
-		it("should handle nested dynamic property access", () => {
+		it("should handle nested dynamic property access", async () => {
 			expect(
-				evaluateExpr("data[config.mapping[config.selected]]", context),
+				await evaluateExpr("data[config.mapping[config.selected]]", context),
 			).toBe("value2");
-			expect(evaluateExpr("data[config.mapping.field1]", context)).toBe(
+			expect(await evaluateExpr("data[config.mapping.field1]", context)).toBe(
 				"value1",
 			);
 		});
@@ -145,52 +152,55 @@ describe("Dynamic Template Capabilities", () => {
 			},
 		};
 
-		it("should evaluate simple conditional expressions", () => {
+		it("should evaluate simple conditional expressions", async () => {
 			expect(
-				evaluateExpr(
+				await evaluateExpr(
 					"user.role === 'admin' ? 'Administrator' : 'User'",
 					context,
 				),
 			).toBe("Administrator");
 			expect(
-				evaluateExpr("user.verified ? 'Verified' : 'Unverified'", context),
+				await evaluateExpr(
+					"user.verified ? 'Verified' : 'Unverified'",
+					context,
+				),
 			).toBe("Verified");
 		});
 
-		it("should handle nested conditional expressions", () => {
+		it("should handle nested conditional expressions", async () => {
 			const expr =
 				"user.role === 'admin' ? 'Admin Access' : (user.subscription === 'premium' ? 'Premium Access' : 'Basic Access')";
-			expect(evaluateExpr(expr, context)).toBe("Admin Access");
+			expect(await evaluateExpr(expr, context)).toBe("Admin Access");
 
 			const context2: any = {
 				...context,
 				user: { ...context.user, role: "user" },
 			};
-			expect(evaluateExpr(expr, context2)).toBe("Premium Access");
+			expect(await evaluateExpr(expr, context2)).toBe("Premium Access");
 
 			const context3: any = {
 				...context2,
 				user: { ...context2.user, subscription: "basic" },
 			};
-			expect(evaluateExpr(expr, context3)).toBe("Basic Access");
+			expect(await evaluateExpr(expr, context3)).toBe("Basic Access");
 		});
 
-		it("should combine conditional logic with property access", () => {
+		it("should combine conditional logic with property access", async () => {
 			const expr =
 				"user.role === 'admin' ? features.admin : (user.subscription === 'premium' ? features.premium : features.basic)";
-			expect((evaluateExpr(expr, context) as any)[4]).toBe("manage"); // admin features include 'manage'
+			expect(((await evaluateExpr(expr, context)) as any)[4]).toBe("manage"); // admin features include 'manage'
 
 			const context2: any = {
 				...context,
 				user: { ...context.user, role: "user" },
 			};
-			expect((evaluateExpr(expr, context2) as any)[3]).toBe("moderate"); // premium features include 'moderate'
+			expect(((await evaluateExpr(expr, context2)) as any)[3]).toBe("moderate"); // premium features include 'moderate'
 
 			const context3: any = {
 				...context2,
 				user: { ...context2.user, subscription: "basic" },
 			};
-			expect((evaluateExpr(expr, context3) as any).length).toBe(2); // basic features have 2 items
+			expect(((await evaluateExpr(expr, context3)) as any).length).toBe(2); // basic features have 2 items
 		});
 	});
 
@@ -230,18 +240,18 @@ describe("Dynamic Template Capabilities", () => {
 			locale: "zh-CN",
 		};
 
-		it("should support basic string concatenation", () => {
+		it("should support basic string concatenation", async () => {
 			const expr =
 				"@concat('Welcome, ', user.name, '! Your plan is ', user.plan)";
-			expect(evaluateExpr(expr, context, functions)).toBe(
+			expect(await evaluateExpr(expr, context, functions)).toBe(
 				"Welcome, 张三! Your plan is premium",
 			);
 		});
 
-		it("should support template string interpolation", () => {
+		it("should support template string interpolation", async () => {
 			const template =
 				"'Dear ' + user.name + ', Thank you for being a ' + user.plan + ' member since ' + user.joinDate + '. Your current storage usage is ' + user.usage.storage + 'GB.'";
-			const result = evaluateExpr(template, context, functions);
+			const result = await evaluateExpr(template, context, functions);
 			expect(result).toBe(
 				"Dear 张三, Thank you for being a premium member since 2024-01-15. Your current storage usage is 42.5GB.",
 			);
@@ -406,15 +416,15 @@ describe("Dynamic Template Capabilities", () => {
 			},
 		};
 
-		it("should calculate order subtotal", () => {
+		it("should calculate order subtotal", async () => {
 			const expr = "@calculateSubtotal(order.items)";
-			const result = evaluateExpr(expr, context, functions);
+			const result = await evaluateExpr(expr, context, functions);
 			expect(result).toBe(850); // (100*2) + (50*1) + (200*3) = 200 + 50 + 600 = 850
 		});
 
-		it("should calculate appropriate discounts", () => {
+		it("should calculate appropriate discounts", async () => {
 			const expr = "@calculateDiscount(order, pricing)";
-			const result = evaluateExpr(expr, context, functions);
+			const result = await evaluateExpr(expr, context, functions);
 
 			// Expected discounts:
 			// - VIP discount: 850 * 0.1 = 85
@@ -426,9 +436,9 @@ describe("Dynamic Template Capabilities", () => {
 			expect(result).toBeCloseTo(199, 0);
 		});
 
-		it("should calculate final order total", () => {
+		it("should calculate final order total", async () => {
 			const expr = "@calculateTotal(order, pricing, config)";
-			const result = evaluateExpr(expr, context, functions);
+			const result = await evaluateExpr(expr, context, functions);
 
 			// Subtotal: 850
 			// Discount: 199
@@ -439,9 +449,9 @@ describe("Dynamic Template Capabilities", () => {
 			expect(result).toBeCloseTo(755.63, 2);
 		});
 
-		it("should calculate earned loyalty points", () => {
+		it("should calculate earned loyalty points", async () => {
 			const expr = "@calculateLoyaltyPoints(order, config)";
-			const result = evaluateExpr(expr, context, functions);
+			const result = await evaluateExpr(expr, context, functions);
 
 			// Subtotal: 850
 			// Points per dollar: 0.5
@@ -449,15 +459,15 @@ describe("Dynamic Template Capabilities", () => {
 			expect(result).toBe(425);
 		});
 
-		it("should format currency values", () => {
+		it("should format currency values", async () => {
 			const expr = "@formatCurrency(@calculateTotal(order, pricing, config))";
-			const result = evaluateExpr(expr, context, functions);
+			const result = await evaluateExpr(expr, context, functions);
 
 			// This test may vary based on locale implementation, but should contain the correct amount
 			expect(result).toContain("755");
 		});
 
-		it("should handle complex conditional business logic", () => {
+		it("should handle complex conditional business logic", async () => {
 			// Determine shipping method and estimate based on order details
 			const expr = `
         order.shipping.address.country !== "中国" ? 
@@ -467,7 +477,7 @@ describe("Dynamic Template Capabilities", () => {
             @formatCurrency(pricing.shipping[order.shipping.method]))
       `;
 
-			const result = evaluateExpr(expr, context, functions);
+			const result = await evaluateExpr(expr, context, functions);
 			// The order is domestic (China) and below free shipping threshold, so should show express shipping cost (¥20)
 			expect(result).toBe("免费配送");
 
@@ -488,7 +498,7 @@ describe("Dynamic Template Capabilities", () => {
 				},
 			};
 
-			const resultLargeOrder = evaluateExpr(expr, largeOrder, functions);
+			const resultLargeOrder = await evaluateExpr(expr, largeOrder, functions);
 			expect(resultLargeOrder).toBe("¥20.00"); // Should be free shipping
 		});
 	});

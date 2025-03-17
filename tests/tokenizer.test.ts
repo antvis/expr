@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Token, tokenize } from "../src";
+import { type Token, tokenize } from "../src/tokenizer";
 
 describe("Tokenizer", () => {
 	describe("Basic Literals", () => {

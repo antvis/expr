@@ -2,26 +2,67 @@ import {
 	type Context,
 	createInterpreterState,
 	evaluateAst,
-	setFunction,
 } from "./interpreter";
-import { type Program, parse } from "./parser";
+import { parse } from "./parser";
 import { tokenize } from "./tokenizer";
+import { promisify } from "./utils";
 
-const blackList = new Set([
-	"constructor",
-	"__proto__",
-	"prototype",
-	"this",
-	"window",
-	"global",
-]);
-
-export interface EvaluatorOptions {
-	strictMode?: boolean;
-	maxTimeout?: number;
+interface ExpressionConfig {
+	maxTimeout: number;
+	blackList: Set<string>;
 }
 
-export class ExpressionError extends Error {
+// Default global configuration
+const defaultConfig: ExpressionConfig = {
+	maxTimeout: 10000,
+	// Global blacklist for keywords that cannot be used in expressions
+	blackList: new Set([
+		"constructor",
+		"__proto__",
+		"prototype",
+		"this",
+		"window",
+		"global",
+	]),
+};
+
+// Current active configuration (initialized with defaults)
+const activeConfig: ExpressionConfig = {
+	...defaultConfig,
+	blackList: new Set(defaultConfig.blackList),
+};
+
+/**
+ * Set global configuration options for all expression evaluations
+ * @param config - Configuration options to set
+ */
+function configure(config: Partial<ExpressionConfig>): void {
+	if (config.maxTimeout !== undefined) {
+		activeConfig.maxTimeout = config.maxTimeout;
+	}
+
+	if (config.blackList !== undefined) {
+		activeConfig.blackList = config.blackList;
+	}
+}
+
+/**
+ * Get the current active configuration
+ * @returns The current configuration
+ */
+function getConfig(): ExpressionConfig {
+	return {
+		...activeConfig,
+		blackList: new Set(activeConfig.blackList),
+	};
+}
+
+// Global registry for functions that can be used in expressions
+// biome-ignore lint/suspicious/noExplicitAny: Function registry needs to support any function type
+type ExpressionFunction = (...args: any[]) => any;
+const exprGlobalFunctions: Record<string, ExpressionFunction> = {};
+
+class ExpressionError extends Error {
 	constructor(
 		message: string,
 		public readonly position?: number,
@@ -30,221 +71,154 @@ export class ExpressionError extends Error {
 		super(message);
 		this.name = "ExpressionError";
 	}
-
-	/**
-	 * Returns formatted error message, including position and token information (if available)
-	 */
-	toString(): string {
-		let errorString = `${this.name}: ${this.message}`;
-
-		if (this.position !== undefined) {
-			errorString += ` (position: ${this.position}`;
-
-			if (this.token !== undefined) {
-				errorString += `, token: ${this.token})`;
-			} else {
-				errorString += ")";
-			}
-		}
-
-		return errorString;
-	}
 }
 
 /**
- * State for the Expression evaluator
+ * Register a function to be used in expressions with the @ prefix
+ * @param name - The name of the function to register
+ * @param fn - The function implementation
  */
-interface ExpressionState {
-	expression: string;
-	interpreterState: ReturnType<typeof createInterpreterState>;
-	options: EvaluatorOptions;
-	ast?: Program;
+function register(name: string, fn: ExpressionFunction): void {
+	exprGlobalFunctions[name] = fn;
 }
 
-/**
- * Creates a new expression state
- * @param expression - The expression to evaluate
- * @returns A new expression state
- */
-export const createExpressionState = (expression: string): ExpressionState => {
-	return {
-		expression,
-		interpreterState: createInterpreterState(),
-		options: {
-			strictMode: true,
-			maxTimeout: 1000,
-		},
-	};
-};
+// Register some common Math functions by default
+register("abs", Math.abs);
+register("ceil", Math.ceil);
+register("floor", Math.floor);
+register("max", Math.max);
+register("min", Math.min);
+register("round", Math.round);
+register("sqrt", Math.sqrt);
+register("pow", Math.pow);
 
 /**
- * Configure evaluation options
- * @param state - Current expression state
- * @param options - Options to configure
- * @returns Updated expression state
+ * Validates that an expression doesn't contain blacklisted keywords
+ * @param expression - The expression to validate
  */
-export const configure = (
-	state: ExpressionState,
-	options: Partial<EvaluatorOptions>,
-): ExpressionState => {
-	return {
-		...state,
-		options: { ...state.options, ...options },
-	};
-};
-
-/**
- * Extend with custom functions
- * @param state - Current expression state
- * @param functions - Functions to add
- * @returns Updated expression state
- */
-export const extend = (
-	state: ExpressionState,
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	functions: Record<string, (...args: any[]) => any>,
-): ExpressionState => {
-	if (!state.options.strictMode) {
-		let newInterpreterState = state.interpreterState;
-		for (const [key, value] of Object.entries(functions)) {
-			newInterpreterState = setFunction(newInterpreterState, key, value);
-		}
-		return {
-			...state,
-			interpreterState: newInterpreterState,
-		};
-	}
-	throw new ExpressionError(
-		"Cannot extend functions in strict mode. Use configure({ strictMode: false }) first.",
-	);
-};
-
-/**
- * Compile the expression
- * @param state - Current expression state
- * @returns Updated expression state with compiled AST
- */
-export const compile = (state: ExpressionState): ExpressionState => {
-	try {
-		if (state.expression === "" || !state.expression) {
-			throw new ExpressionError("Cannot evaluate empty expression");
-		}
-		const tokens = tokenize(state.expression);
-		const ast = parse(tokens);
-		return {
-			...state,
-			ast,
-		};
-	} catch (error) {
-		if (error instanceof ExpressionError) {
-			throw error;
-		}
-
-		if (error instanceof Error) {
-			throw new ExpressionError(error.message);
-		}
-		throw error;
-	}
-};
-
-/**
- * Evaluate the expression with given context
- * @param state - Current expression state
- * @param context - Variables to use during evaluation
- * @returns The evaluation result
- */
-export const evaluateExpression = (
-	state: ExpressionState,
-	context: Context = {},
-) => {
-	try {
-		let currentState = state;
-		if (!currentState.ast) {
-			currentState = compile(currentState);
-		}
-
-		if (!currentState.ast) {
-			throw new ExpressionError("Cannot evaluate empty expression");
-		}
-
-		return evaluateAst(
-			currentState.ast,
-			currentState.interpreterState,
-			context,
-		);
-	} catch (error) {
-		if (error instanceof ExpressionError) {
-			throw error;
-		}
-
-		if (error instanceof Error) {
-			throw new ExpressionError(error.message);
-		}
-		throw error;
-	}
-};
-
-// For backward compatibility with the class-based API
-export class Expression {
-	private state: ExpressionState;
-
-	constructor(expression: string) {
-		this.state = createExpressionState(expression);
+function validateExpression(expression: string): void {
+	if (!expression || expression.trim() === "") {
+		throw new ExpressionError("Cannot evaluate empty expression");
 	}
 
-	/**
-	 * Configure evaluation options
-	 */
-	configure(options: Partial<EvaluatorOptions>): this {
-		this.state = configure(this.state, options);
-		return this;
-	}
-
-	/**
-	 * Extend with custom functions
-	 */
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	extend(functions: Record<string, (...args: any[]) => any>): this {
-		this.state = extend(this.state, functions);
-		return this;
-	}
-
-	/**
-	 * Compile the expression
-	 */
-	compile(): this {
-		this.state = compile(this.state);
-		return this;
-	}
-
-	/**
-	 * Evaluate the expression with given context
-	 */
-	evaluate(context: Context = {}) {
-		return evaluateExpression(this.state, context);
-	}
-}
-
-// Convenient factory functions
-export function createExpression(expression: string): Expression {
-	return new Expression(expression);
-}
-
-export function evaluate(expression: string, context: Context = {}) {
 	const blackListRegexp = new RegExp(
-		`\\b(${Array.from(blackList).join("\\b|\\b")})\\b`,
+		`\\b(${Array.from(activeConfig.blackList).join("\\b|\\b")})\\b`,
 		"g",
 	);
 
 	if (blackListRegexp.test(expression)) {
 		throw new ExpressionError("Blacklisted keywords detected in expression");
 	}
-
-	const state = createExpressionState(expression);
-	return evaluateExpression(state, context);
 }
 
-// Export all public symbols for custom evaluators
-export * from "./interpreter";
-export * from "./parser";
-export * from "./tokenizer";
+/**
+ * Executes a function with a timeout
+ * @param fn - Function to execute
+ * @returns Result of the function execution
+ */
+async function executeWithTimeout<T>(fn: () => T): Promise<T> {
+	const maxTimeout = activeConfig.maxTimeout;
+
+	try {
+		// Create a promise for the function execution
+		const fnPromise = new Promise<T>((resolve, reject) => {
+			try {
+				const result = fn();
+				resolve(result);
+			} catch (err) {
+				reject(err);
+			}
+		});
+
+		// Create a timeout promise
+		const timeoutPromise = new Promise<never>((_, reject) => {
+			const timeoutId = setTimeout(() => {
+				reject(
+					new ExpressionError(`Evaluation timed out after ${maxTimeout}ms`),
+				);
+			}, maxTimeout);
+
+			// Clean up timeout if function completes first
+			fnPromise.then(() => clearTimeout(timeoutId)).catch(() => {});
+		});
+
+		// Race the promises and properly await the result
+		return await Promise.race([fnPromise, timeoutPromise]);
+	} catch (error) {
+		// Properly propagate any errors
+		if (error instanceof Error) {
+			throw error;
+		}
+		throw new ExpressionError(`Unknown error during evaluation: ${error}`);
+	}
+}
+
+/**
+ * Compile an expression into a reusable function
+ * @param expression - The expression to compile
+ * @returns A function that evaluates the expression with a given context
+ */
+function compileSync(
+	expression: string,
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+): (context?: Context) => Promise<any> {
+	validateExpression(expression);
+
+	const tokens = tokenize(expression);
+	const ast = parse(tokens);
+	const interpreterState = createInterpreterState({}, exprGlobalFunctions);
+
+	// Return a function that can be called with different contexts
+	// biome-ignore lint/suspicious/noExplicitAny: Return type depends on the expression
+	return (context: Context = {}): Promise<any> => {
+		try {
+			// Execute the evaluation with timeout protection
+			return executeWithTimeout(() =>
+				evaluateAst(ast, interpreterState, context),
+			);
+		} catch (error) {
+			if (error instanceof ExpressionError) {
+				throw error;
+			}
+
+			if (error instanceof Error) {
+				throw new ExpressionError(error.message);
+			}
+			throw error;
+		}
+	};
+}
+
+/**
+ * Asynchronously compile an expression into a function that can be called with a context
+ * @param expression - The expression to compile
+ * @returns A Promise that resolves to a function that evaluates the expression with a given context
+ */
+const compileAsync = promisify(compileSync);
+
+/**
+ * Evaluate an expression with a given context
+ * @param expression - The expression to evaluate
+ * @param context - The context to use for evaluation
+ * @returns The result of evaluating the expression
+ */
+async function evaluate(
+	expression: string,
+	context: Context = {},
+	// biome-ignore lint/suspicious/noExplicitAny: Return type depends on the expression
+): Promise<any> {
+	validateExpression(expression);
+
+	const evaluator = compileSync(expression);
+	return evaluator(context);
+}
+
+export {
+	compileAsync as compile,
+	compileSync,
+	evaluate,
+	getConfig,
+	register,
+	configure,
+	ExpressionError,
+};
