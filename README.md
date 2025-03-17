@@ -191,11 +191,11 @@ gantt
     axisFormat %s
 
     section evaluate after compile
-    1.59 : 0, 1.59
+    1.59 : 0, 159
     section evaluate without compile
-    6.36 : 0, 6.36
+    6.36 : 0, 636
     section expr-eval Parser
-    23.94 : 0, 23.94
+    23.94 : 0, 2394
 ```
 
 ## Advanced Usage
