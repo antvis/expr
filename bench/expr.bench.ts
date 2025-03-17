@@ -1,5 +1,9 @@
 import { bench, describe } from "vitest";
-import { Expression } from "../src";
+import { evaluate, register } from "../src";
+import { createInterpreterState } from "../src/interpreter";
+import { evaluateAst } from "../src/interpreter";
+import { parse } from "../src/parser";
+import { tokenize } from "../src/tokenizer";
 
 const context = {
 	user: {
@@ -27,6 +31,20 @@ const context = {
 	},
 };
 
+const state = createInterpreterState(
+	{},
+	{
+		calculateTotal: context.calculateTotal,
+		applyDiscount: context.applyDiscount,
+	},
+);
+
+const evaluateSync = (expr: string, context: any) => {
+	const tokens = tokenize(expr);
+	const ast = parse(tokens);
+	return evaluateAst(ast, state, context);
+};
+
 // 测试表达式
 const simpleExpression = "user.age + 5";
 const mediumExpression = 'user.scores[2] > 80 ? "Good" : "Needs improvement"';
@@ -36,20 +54,8 @@ const complexExpression =
 const complexExpression2 =
 	'applyDiscount(calculateTotal(products), 10) > 2000 ? "High value" : "Standard"';
 
-// 预编译表达式
-const graphSecureEvalSimpleCompile = new Expression(simpleExpression)
-	.configure({ strictMode: false })
-	.compile();
-const graphSecureEvalMediumCompile = new Expression(mediumExpression)
-	.configure({ strictMode: false })
-	.compile();
-const graphSecureEvalComplexCompile = new Expression(complexExpression)
-	.configure({ strictMode: false })
-	.extend({
-		calculateTotal: context.calculateTotal,
-		applyDiscount: context.applyDiscount,
-	})
-	.compile();
+register("calculateTotal", context.calculateTotal);
+register("applyDiscount", context.applyDiscount);
 
 // 创建 Function 对象
 const newFunctionSimple = new Function(
@@ -66,31 +72,43 @@ const newFunctionComplex = new Function(
 );
 
 describe("Simple Expression Benchmarks", () => {
-	bench("graph_secure_eval (baseline)", () => {
-		graphSecureEvalSimpleCompile.evaluate(context);
+	bench("evaluate (baseline)", async () => {
+		await evaluate(simpleExpression, context);
 	});
 
-	bench("new Function (vs graph_secure_eval)", () => {
+	bench("new Function (vs evaluate)", () => {
 		newFunctionSimple(context);
+	});
+
+	bench("evaluateSync (vs evaluate)", () => {
+		evaluateSync(simpleExpression, context);
 	});
 });
 
 describe("Medium Expression Benchmarks", () => {
-	bench("graph_secure_eval (baseline)", () => {
-		graphSecureEvalMediumCompile.evaluate(context);
+	bench("evaluate (baseline)", async () => {
+		await evaluate(mediumExpression, context);
 	});
 
-	bench("new Function (vs graph_secure_eval)", () => {
+	bench("new Function (vs evaluate)", () => {
 		newFunctionMedium(context);
+	});
+
+	bench("evaluateSync (vs evaluate)", () => {
+		evaluateSync(mediumExpression, context);
 	});
 });
 
 describe("Complex Expression Benchmarks", () => {
-	bench("graph_secure_eval (baseline)", () => {
-		graphSecureEvalComplexCompile.evaluate(context);
+	bench("evaluate (baseline)", async () => {
+		await evaluate(complexExpression, context);
 	});
 
-	bench("new Function (vs graph_secure_eval)", () => {
+	bench("new Function (vs evaluate)", () => {
 		newFunctionComplex(context);
+	});
+
+	bench("evaluateSync (vs evaluate)", () => {
+		evaluateSync(complexExpression, context);
 	});
 });
