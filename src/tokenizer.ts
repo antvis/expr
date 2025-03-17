@@ -1,4 +1,4 @@
-import { ExpressionError } from "./index";
+import { ExpressionError } from "./utils";
 
 /**
  * TokenType represents all possible token types in our expression language

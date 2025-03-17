@@ -5,22 +5,12 @@ import {
 } from "./interpreter";
 import { parse } from "./parser";
 import { tokenize } from "./tokenizer";
+import { ExpressionError } from "./utils";
 
 // Global registry for functions that can be used in expressions
 // biome-ignore lint/suspicious/noExplicitAny: Function registry needs to support any function type
 type ExpressionFunction = (...args: any[]) => any;
 const exprGlobalFunctions: Record<string, ExpressionFunction> = {};
-
-class ExpressionError extends Error {
-	constructor(
-		message: string,
-		public readonly position?: number,
-		public readonly token?: string,
-	) {
-		super(message);
-		this.name = "ExpressionError";
-	}
-}
 
 /**
  * Register a function to be used in expressions with the @ prefix
