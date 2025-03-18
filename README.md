@@ -4,14 +4,16 @@ Have you ever wanted to use some dynamic JS capabilities when using the ssr char
 
 Now we have solved this problem for you. We have designed a simple and easy-to-understand template syntax to help you achieve dynamic rendering of charts.
 
-## Features
 
-- 🔒 **Secure by default** - No access to global objects or prototype chain, does not use `eval` or `new Function`
-- 🚀 **High performance** - Supports pre-compilation of expressions for improved performance with repeated evaluations
-- 🛠️ **Extensible** - Register custom functions to easily extend functionality
-- 🪩 **Lightweight** - Zero dependencies, small footprint, only `7.8KB`
+## ✨ Features
 
-## Installation
+- 🔒 **Secure by default** - No access to global objects or prototype chain, does not use `eval` or `new Function`.
+- 🚀 **High performance** - Supports pre-compilation of expressions for improved performance with repeated evaluations.
+- 🛠️ **Extensible** - Register custom functions to easily extend functionality.
+- 🪩 **Lightweight** - Zero dependencies, small footprint, only `7.8 Kb` before gzip.
+
+
+## 📥 Installation
 
 ```bash
 npm install @antv/expr
@@ -21,7 +23,8 @@ yarn add @antv/expr
 pnpm add @antv/expr
 ```
 
-## Basic Usage
+
+## 🔨 Usage
 
 ### Synchronous Expression Evaluation
 
@@ -51,45 +54,23 @@ const result1 = evaluator({ price: 10, quantity: 5 }); // returns 50
 const result2 = evaluator({ price: 20, quantity: 3 }); // returns 60
 ```
 
-### Using Asynchronous Patterns (Optional)
-
-While the library is synchronous, you can still use asynchronous patterns if needed:
-
-```typescript
-import { evaluate } from '@antv/expr';
-
-// Wrap evaluation in an async function
-async function asyncEvaluate(expr, context) {
-  return new Promise((resolve, reject) => {
-    try {
-      resolve(evaluate(expr, context));
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
-
-// Use with async/await
-const result = await asyncEvaluate('x + y', { x: 10, y: 20 }); // returns 30
-```
-
-### Registering Custom Functions
+### Registering and Calling Functions
 
 ```typescript
 import { register, evaluate } from '@antv/expr';
 
-// Register custom functions
-register('sum', (...args) => args.reduce((a, b) => a + b, 0));
-register('average', (array) => array.reduce((a, b) => a + b, 0) / array.length);
+// Register functions
+register('formatCurrency', (amount) => `$${amount.toFixed(2)}`);
 
-// Use custom functions in expressions
-const result = evaluate('@sum(1, 2, 3, 4)'); // returns 10
-const avg = evaluate('@average(data.values)', { 
-  data: { values: [10, 20, 30, 40] } 
-}); // returns 25
+// Function call with arguments
+const result = evaluate('@max(a, b, c)', { a: 5, b: 9, c: 2 }); // returns 9
+
+// Expression as function arguments
+const result = evaluate('@formatCurrency(price * quantity)', { 
+  price: 10.5, quantity: 3 
+}); // returns '$31.50'
 ```
-
-## Supported Syntax
+Build-in Functions: `abs`, `ceil`, `floor`, `round`, `sqrt`, `pow`, `max`, `min`.
 
 ### Variable References
 
@@ -155,26 +136,32 @@ const result = evaluate('score >= 90 ? "A" : score >= 80 ? "B" : "C"', {
 }); // returns 'B'
 ```
 
-### Function Calls
+### Timeout Handling
+
+You can implement timeout handling by wrapping your evaluation in a `Promise.race` with a timeout:
 
 ```typescript
-import { register, evaluate } from '@antv/expr';
+import { evaluate } from "@antv/expr";
 
-// Register functions
-register('max', Math.max);
-register('formatCurrency', (amount) => `$${amount.toFixed(2)}`);
+// Create a function that evaluates with a timeout
+function evaluateWithTimeout(expr, context, timeoutMs) {
+  const evaluationPromise = new Promise((resolve) => {
+    resolve(evaluate(expr, context));
+  });
 
-// Function call with arguments
-const result = evaluate('@max(a, b, c)', { a: 5, b: 9, c: 2 }); // returns 9
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(
+      () => reject(new Error(`Evaluation timed out after ${timeoutMs}ms`)),
+      timeoutMs,
+    );
+	});
 
-// Expression as function arguments
-const result = evaluate('@formatCurrency(price * quantity)', { 
-  price: 10.5, quantity: 3 
-}); // returns '$31.50'
+	return Promise.race([evaluationPromise, timeoutPromise]);
+}
 ```
-**Default Global Functions:** `['abs', 'ceil', 'floor', 'round', 'sqrt', 'pow', 'max', 'min']`
 
-## Benchmarks
+
+## 🚀Benchmarks
 
 Performance comparison of different evaluation methods: (baseline: new Function)
 
@@ -191,64 +178,23 @@ gantt
     axisFormat %s
 
     section Simple
-    evaluate after compile    :done, 0, 159
-    evaluate without compile  :done, 0, 636
+    expr evaluate after compile    :done, 0, 159
+    expr evaluate without compile  :done, 0, 636
     expr-eval Parser          :done, 0, 2394
 
     section Medium
-    evaluate after compile    :done, 0, 216
-    evaluate without compile  :done, 0, 981
+    expr evaluate after compile    :done, 0, 216
+    expr evaluate without compile  :done, 0, 981
     expr-eval Parser          :done, 0, 3781
 
     section Complex
-    evaluate after compile    :done, 0, 159
-    evaluate without compile  :done, 0, 489
+    expr evaluate after compile    :done, 0, 159
+    expr evaluate without compile  :done, 0, 489
     expr-eval Parser          :done, 0, 3274
 ```
 
-## Advanced Usage
 
-### Timeout Handling
-
-You can implement timeout handling by wrapping your evaluation in a Promise.race with a timeout:
-
-```typescript
-import { evaluate } from "@antv/expr";
-
-// Create a function that evaluates with a timeout
-function evaluateWithTimeout(expr, context, timeoutMs) {
-	const evaluationPromise = new Promise((resolve, reject) => {
-		try {
-			const result = evaluate(expr, context);
-			resolve(result);
-		} catch (error) {
-			reject(error);
-		}
-	});
-
-	const timeoutPromise = new Promise((_, reject) => {
-		setTimeout(
-			() => reject(new Error(`Evaluation timed out after ${timeoutMs}ms`)),
-			timeoutMs,
-		);
-	});
-
-	return Promise.race([evaluationPromise, timeoutPromise]);
-}
-```
-## Security Features
-
-This library is designed with security in mind:
-
-- ✅ No access to global objects (`window`, `global`, etc.)
-- ✅ No access to prototype chain
-- ✅ No use of `eval` or `Function` constructor
-- ✅ Expression execution has timeout protection
-- ✅ Configurable keyword blacklist
-
-## API Reference
-
-### Core Functions
+## 📮API Reference
 
 #### `evaluate(expression: string, context?: object): any`
 
@@ -265,8 +211,6 @@ Synchronously compiles an expression, returning a function that can be used mult
 - `expression`: The expression string to compile
 - Returns: A function that accepts a context object and returns the evaluation result
 
-### Registration
-
 #### `register(name: string, fn: Function): void`
 
 Registers a custom function that can be used in expressions.
@@ -274,13 +218,8 @@ Registers a custom function that can be used in expressions.
 - `name`: Function name (used with @ prefix in expressions)
 - `fn`: Function implementation
 
-### Error Handling
-
 All evaluation errors throw an `ExpressionError` type exception with detailed error information.
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
 
 ## License
 
