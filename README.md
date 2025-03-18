@@ -5,7 +5,7 @@ Have you ever wanted to use some dynamic JS capabilities when using the ssr char
 Now we have solved this problem for you. We have designed a simple and easy-to-understand template syntax to help you achieve dynamic rendering of charts.
 
 
-## Features
+## ✨ Features
 
 - 🔒 **Secure by default** - No access to global objects or prototype chain, does not use `eval` or `new Function`.
 - 🚀 **High performance** - Supports pre-compilation of expressions for improved performance with repeated evaluations.
@@ -13,7 +13,7 @@ Now we have solved this problem for you. We have designed a simple and easy-to-u
 - 🪩 **Lightweight** - Zero dependencies, small footprint, only `7.8 Kb` before gzip.
 
 
-## Installation
+## 📥 Installation
 
 ```bash
 npm install @antv/expr
@@ -24,7 +24,7 @@ pnpm add @antv/expr
 ```
 
 
-## Usage
+## 🔨 Usage
 
 ### Synchronous Expression Evaluation
 
@@ -161,7 +161,7 @@ function evaluateWithTimeout(expr, context, timeoutMs) {
 ```
 
 
-## Benchmarks
+## 🚀Benchmarks
 
 Performance comparison of different evaluation methods: (baseline: new Function)
 
@@ -194,7 +194,7 @@ gantt
 ```
 
 
-## API Reference
+## 📮API Reference
 
 #### `evaluate(expression: string, context?: object): any`
 
