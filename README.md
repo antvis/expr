@@ -186,7 +186,7 @@ Performance comparison of different evaluation methods: (baseline: new Function)
 
 ```mermaid
 gantt
-    title Performance Comparison (Baseline: new Function)
+    title Performance Comparison (Baseline: new Function) * 100
     dateFormat  X
     axisFormat %s
 
