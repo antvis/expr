@@ -1,9 +1,8 @@
 # @antv/expr
 
-Have you ever wanted to use some dynamic JS capabilities when using the ssr chart library but were afraid of data security?
+Have you ever wanted to make your SSR charts more dynamic but worried about security risks?
 
-Now we have solved this problem for you. We have designed a simple and easy-to-understand template syntax to help you achieve dynamic rendering of charts.
-
+We've got you covered! Our solution introduces an easy-to-use template syntax that safely serializes functions, allowing you to dynamically render charts without compromising security. 🚀
 
 ## ✨ Features
 
@@ -154,9 +153,9 @@ function evaluateWithTimeout(expr, context, timeoutMs) {
       () => reject(new Error(`Evaluation timed out after ${timeoutMs}ms`)),
       timeoutMs,
     );
-	});
+  });
 
-	return Promise.race([evaluationPromise, timeoutPromise]);
+  return Promise.race([evaluationPromise, timeoutPromise]);
 }
 ```
 
