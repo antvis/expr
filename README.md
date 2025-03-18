@@ -191,19 +191,19 @@ gantt
     axisFormat %s
 
     section Simple
-    evaluate after compile    :done, 0, 159
-    evaluate without compile  :done, 0, 636
-    expr-eval Parser          :done, 0, 2394
+    evaluate after compile    :done, 0, 1.59
+    evaluate without compile  :done, 0, 6.36
+    expr-eval Parser          :done, 0, 23.94
 
     section Medium
-    evaluate after compile    :done, 0, 216
-    evaluate without compile  :done, 0, 981
-    expr-eval Parser          :done, 0, 3781
+    evaluate after compile    :done, 0, 2.16
+    evaluate without compile  :done, 0, 9.81
+    expr-eval Parser          :done, 0, 37.81
 
     section Complex
-    evaluate after compile    :done, 0, 159
-    evaluate without compile  :done, 0, 489
-    expr-eval Parser          :done, 0, 3274
+    evaluate after compile    :done, 0, 1.59
+    evaluate without compile  :done, 0, 4.89
+    expr-eval Parser          :done, 0, 32.74
 ```
 
 ## Advanced Usage
