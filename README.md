@@ -1,4 +1,4 @@
-# @antv/expr
+# @antv/expr ![gzip size](https://img.badgesize.io/https://unpkg.com/@antv/expr/dist/index.esm.js?compression=gzip)
 
 Have you ever wanted to make your SSR charts more dynamic but worried about security risks?
 
@@ -9,7 +9,7 @@ We've got you covered! Our solution introduces an easy-to-use template syntax th
 - 🔒 **Secure by default** - No access to global objects or prototype chain, does not use `eval` or `new Function`.
 - 🚀 **High performance** - Supports pre-compilation of expressions for improved performance with repeated evaluations.
 - 🛠️ **Extensible** - Register custom functions to easily extend functionality.
-- 🪩 **Lightweight** - Zero dependencies, small footprint, only `7.8 Kb` before gzip.
+- 🪩 **Lightweight** - Zero dependencies, small footprint, before gzip it was less than `8 Kb`.
 
 
 ## 📥 Installation
