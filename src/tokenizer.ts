@@ -1,4 +1,4 @@
-import { ExpressionError } from "./utils";
+import { ExpressionError } from "./error";
 
 // token type enum
 export enum TokenType {

@@ -10,7 +10,7 @@ import {
 	type Program,
 	type UnaryExpression,
 } from "./parser";
-import { ExpressionError } from "./utils";
+import { ExpressionError } from "./error";
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type Context = Record<string, any>;

@@ -1,3 +1,6 @@
+/**
+ * Error class for expression parsing errors.
+ */
 export class ExpressionError extends Error {
 	constructor(
 		message: string,
