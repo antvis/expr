@@ -5,12 +5,7 @@
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "LICENSE",
-    "README.md",
-    "package.json"
-  ],
+  "files": ["dist", "LICENSE", "README.md", "package.json"],
   "scripts": {
     "build": "rollup -c && npm run size",
     "test": "vitest run --coverage",
@@ -39,14 +34,17 @@
     "tslib": "^2.8.1",
     "vitest": "^3.0.8"
   },
-  "limit-size": [{
-    "path": "dist/index.cjs.js",
-    "limit": "8 Kb"
-  }, {
-    "path": "dist/index.cjs.js",
-    "limit": "3 Kb",
-    "gzip": true
-  }],
+  "limit-size": [
+    {
+      "path": "dist/index.cjs.js",
+      "limit": "8 Kb"
+    },
+    {
+      "path": "dist/index.cjs.js",
+      "limit": "3 Kb",
+      "gzip": true
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/antvis/expr"

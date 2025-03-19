@@ -1,4 +1,3 @@
-
 // Global registry for functions that can be used in expressions
 // biome-ignore lint/suspicious/noExplicitAny: Function registry needs to support any function type
 type ExpressionFunction = (...args: any[]) => any;
@@ -26,7 +25,7 @@ export function register(name: string, fn: ExpressionFunction): void {
 
 /**
  * Get all the registered functions
- * @returns 
+ * @returns
  */
 export function getFunctions(): Record<string, ExpressionFunction> {
   return exprGlobalFunctions;

@@ -1,5 +1,5 @@
-import { type Context } from "./interpreter";
 import { compile } from "./compile";
+import type { Context } from "./interpreter";
 
 /**
  * Evaluate an expression with a given context

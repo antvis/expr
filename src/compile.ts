@@ -1,11 +1,11 @@
+import { getFunctions } from "./functions";
 import {
   type Context,
   createInterpreterState,
   evaluateAst,
-} from './interpreter';
-import { parse } from './parser';
-import { getFunctions } from './functions';
-import { tokenize } from './tokenizer';
+} from "./interpreter";
+import { parse } from "./parser";
+import { tokenize } from "./tokenizer";
 
 /**
  * Compile an expression into a reusable function
@@ -13,7 +13,7 @@ import { tokenize } from './tokenizer';
  * @returns A function that evaluates the expression with a given context
  */
 export function compile(
-  expression: string
+  expression: string,
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 ): (context?: Context) => any {
   const tokens = tokenize(expression);
