@@ -48,16 +48,13 @@ function compile(
 	// biome-ignore lint/suspicious/noExplicitAny: Return type depends on the expression
 	return (context: Context = {}): any => {
 		try {
-			// Execute the evaluation with timeout protection
 			return evaluateAst(ast, interpreterState, context);
 		} catch (error) {
 			if (error instanceof ExpressionError) {
 				throw error;
 			}
 
-			if (error instanceof Error) {
-				throw new ExpressionError(error.message);
-			}
+			// Pass through other errors without wrapping them
 			throw error;
 		}
 	};

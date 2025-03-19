@@ -141,10 +141,9 @@ export const evaluateAst = (
 
 		switch (node.operator) {
 			case "+":
-				if (typeof left === "number" && typeof right === "number") {
-					return left + right;
-				}
-				return String(left) + String(right);
+				// For addition, handle both numeric addition and string concatenation
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				return (left as any) + (right as any);
 			case "-":
 				return (left as number) - (right as number);
 			case "*":
@@ -224,32 +223,25 @@ export const evaluateAst = (
 	 * @returns The result of evaluation
 	 */
 	const evaluateNode = (node: Expression): unknown => {
-		try {
-			switch (node.type) {
-				case NodeType.Literal:
-					return evaluateLiteral(node);
-				case NodeType.Identifier:
-					return evaluateIdentifier(node);
-				case NodeType.MemberExpression:
-					return evaluateMemberExpression(node);
-				case NodeType.CallExpression:
-					return evaluateCallExpression(node);
-				case NodeType.BinaryExpression:
-					return evaluateBinaryExpression(node);
-				case NodeType.UnaryExpression:
-					return evaluateUnaryExpression(node);
-				case NodeType.ConditionalExpression:
-					return evaluateConditionalExpression(node);
-				default:
-					throw new ExpressionError(
-						`Unsupported node type: ${(node as Expression).type}`,
-					);
-			}
-		} catch (error) {
-			if (error instanceof ExpressionError) {
-				throw new ExpressionError(`Evaluation error: ${error.message}`);
-			}
-			throw error;
+		switch (node.type) {
+			case NodeType.Literal:
+				return evaluateLiteral(node);
+			case NodeType.Identifier:
+				return evaluateIdentifier(node);
+			case NodeType.MemberExpression:
+				return evaluateMemberExpression(node);
+			case NodeType.CallExpression:
+				return evaluateCallExpression(node);
+			case NodeType.BinaryExpression:
+				return evaluateBinaryExpression(node);
+			case NodeType.UnaryExpression:
+				return evaluateUnaryExpression(node);
+			case NodeType.ConditionalExpression:
+				return evaluateConditionalExpression(node);
+			default:
+				throw new ExpressionError(
+					`Evaluation error: Unsupported node type: ${(node as Expression).type}`,
+				);
 		}
 	};
 

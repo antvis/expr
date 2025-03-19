@@ -151,7 +151,7 @@ describe("Coverage Improvement Tests", () => {
 			};
 
 			expect(() => evaluateAst(ast, interpreterState, {})).toThrow(
-				"Evaluation error: Postfix operators are not supported: ~",
+				"Postfix operators are not supported: ~",
 			);
 		});
 	});
