@@ -1,8 +1,24 @@
-# @antv/expr ![gzip size](https://img.badgesize.io/https://unpkg.com/@antv/expr/dist/index.esm.js?compression=gzip)
+<div align="center">
 
-Have you ever wanted to make your SSR charts more dynamic but worried about security risks?
+<h1>@antv/expr: Mathematical Expression Parser</h1>
 
-We've got you covered! Our solution introduces an easy-to-use template syntax that safely serializes functions, allowing you to dynamically render charts without compromising security. 🚀
+Lightweight JavaScript expression parser and evaluator, safety and high-performance. 🚀
+
+![gzip size](https://img.badgesize.io/https://unpkg.com/@antv/expr/dist/index.esm.js?compression=gzip)
+[![Build Status](https://github.com/antvis/expr/actions/workflows/build.yml/badge.svg)](https://github.com/antvis/expr/actions/workflows/build.yml)
+[![npm Version](https://img.shields.io/npm/v/@antv/expr.svg)](https://www.npmjs.com/package/@antv/expr)
+[![npm Download](https://img.shields.io/npm/dm/@antv/expr.svg)](https://www.npmjs.com/package/@antv/expr)
+
+</div>
+
+Used to parse a _mathematical expressions_ to _JavaScript function_ safely. For example, in [@antv/g2](https://github.com/antvis/expr), we can set the style with an expressions.
+
+```ts
+{
+  fill: "{ d.value > 100 ? 'red' : 'green' }", // Equivalent to function: `d => d.value > 100 ? 'red' : 'green'`
+}
+```
+
 
 ## ✨ Features
 
@@ -24,6 +40,15 @@ pnpm add @antv/expr
 
 
 ## 🔨 Usage
+
+- [Synchronous Expression Evaluation](#synchronous-expression-evaluation)
+- [Pre-compiling Expressions](#pre-compiling-expressions)
+- [Registering and Calling Functions](#registering-and-calling-functions)
+- [Variable References](#variable-references)
+- [Arithmetic Operations](#arithmetic-operations)
+- [Comparison and Logical Operations](#comparison-and-logical-operations)
+- [Conditional (Ternary) Expressions](#conditional-ternary-expressions)
+- [Timeout Handling](#timeout-handling)
 
 ### Synchronous Expression Evaluation
 
