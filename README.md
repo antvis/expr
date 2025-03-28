@@ -15,7 +15,8 @@ Used to parse a _mathematical expressions_ to _JavaScript function_ safely. For 
 
 ```ts
 {
-  fill: "{ d.value > 100 ? 'red' : 'green' }", // Equivalent to function: `d => d.value > 100 ? 'red' : 'green'`
+  // Equivalent to function: `d => d.value > 100 ? 'red' : 'green'`
+  fill: "{ d.value > 100 ? 'red' : 'green' }",
 }
 ```
 
