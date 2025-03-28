@@ -136,6 +136,24 @@ export const evaluateAst = (
    * @example x > y → context.x > context.y
    */
   const evaluateBinaryExpression = (node: BinaryExpression): unknown => {
+    // Implement short-circuit evaluation for logical operators
+    if (node.operator === "&&") {
+      const left = evaluateNode(node.left);
+      // If left side is falsy, return it immediately without evaluating right side
+      if (!left) return left;
+      // Otherwise evaluate and return right side
+      return evaluateNode(node.right);
+    }
+
+    if (node.operator === "||") {
+      const left = evaluateNode(node.left);
+      // If left side is truthy, return it immediately without evaluating right side
+      if (left) return left;
+      // Otherwise evaluate and return right side
+      return evaluateNode(node.right);
+    }
+
+    // For other operators, evaluate both sides normally
     const left = evaluateNode(node.left);
     const right = evaluateNode(node.right);
 
@@ -164,10 +182,6 @@ export const evaluateAst = (
         return (left as number) < (right as number);
       case "<=":
         return (left as number) <= (right as number);
-      case "&&":
-        return (left as boolean) && (right as boolean);
-      case "||":
-        return (left as boolean) || (right as boolean);
       default:
         throw new ExpressionError(`Unknown operator: ${node.operator}`);
     }
