@@ -18,6 +18,17 @@ describe("API Integration Tests", () => {
       expect(evaluate("x / y", context)).toBe(2);
     });
 
+    it("should apply unary operators to member access results", () => {
+      const context = { d: { active: false, value: 120 }, arr: [0, 1] };
+      expect(evaluate("!d.active", context)).toBe(true);
+      expect(evaluate('!d.active ? "grey" : "red"', context)).toBe("grey");
+      expect(evaluate("!arr[0]", context)).toBe(true);
+      expect(evaluate("!!arr[1]", context)).toBe(true);
+      expect(evaluate("-d.value", context)).toBe(-120);
+      expect(evaluate("-d.value + 20", context)).toBe(-100);
+      expect(evaluate("-(d).value", context)).toBe(-120);
+    });
+
     it("should throw ExpressionError for invalid expressions", () => {
       expect(() => evaluate("")).toThrow(ExpressionError);
       expect(() => evaluate("x + y")).toThrow(ExpressionError);
