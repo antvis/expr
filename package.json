@@ -32,6 +32,7 @@
     "limit-size": "^0.1.4",
     "rollup": "^4.34.6",
     "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
     "vitest": "^3.0.8"
   },
   "limit-size": [
