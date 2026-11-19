@@ -352,7 +352,11 @@ export const parse = (tokens: Token[]): Program => {
       (token.value === "!" || token.value === "-")
     ) {
       consume(); // consume operator
-      const argument = parsePrimary();
+      let argument = parsePrimary();
+      // Member access binds tighter than unary operators: !a.b is !(a.b)
+      while (match(TokenType.DOT) || match(TokenType.BRACKET_LEFT)) {
+        argument = parseMemberExpression(argument);
+      }
       return {
         type: NodeType.UnaryExpression,
         operator: token.value,

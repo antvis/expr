@@ -230,6 +230,30 @@ describe("Parser", () => {
         },
       });
     });
+
+    it("should apply unary operators after member access", () => {
+      const ast = parseExpression("!a.b");
+      expect(ast).toEqual({
+        type: NodeType.Program,
+        body: {
+          type: NodeType.UnaryExpression,
+          operator: "!",
+          argument: {
+            type: NodeType.MemberExpression,
+            object: {
+              type: NodeType.Identifier,
+              name: "a",
+            },
+            property: {
+              type: NodeType.Identifier,
+              name: "b",
+            },
+            computed: false,
+          },
+          prefix: true,
+        },
+      });
+    });
   });
 
   describe("Conditional Expressions", () => {
